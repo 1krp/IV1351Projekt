@@ -1,0 +1,5 @@
+SELECT * FROM course_layout
+
+SELECT * FROM study_period
+
+SELECT * FROM activity_employee AS ae WHERE ae.course_instance_id = 2;

@@ -11,3 +11,4 @@ INSERT INTO course_instance_study_period (course_instance_id, study_period_id) V
 INSERT INTO planned_activity (course_instance_id, planned_hours, activity_id) VALUES (2, 10, 2), (3, 10, 2), (4, 10, 2), (5, 10, 2);
 
 INSERT INTO activity_employee (course_instance_id, employee_id) VALUES (2,2), (3,2), (4,2), (5,2);
+

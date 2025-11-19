@@ -1,0 +1,44 @@
+-- Connect to the existing database (no DROP DATABASE / CREATE DATABASE)
+\c iv_db;
+
+-- ===== CLEAN UP PREVIOUS RUN =====
+
+-- Drop trigger functions
+DROP FUNCTION IF EXISTS prevent_study_period_modification() CASCADE;
+DROP FUNCTION IF EXISTS check_employee_study_period_load() CASCADE;
+DROP FUNCTION IF EXISTS check_period_addition_load() CASCADE;
+
+-- Drop tables (CASCADE removes FKs, triggers, etc.)
+DROP TABLE IF EXISTS
+    activity_employee,
+    planned_activity,
+    person_phone,
+    employee_skill,
+    course_instance_study_period,
+    course_instance,
+    teaching_activity,
+    study_period,
+    skill,
+    phone,
+    person_email,
+    person,
+    job_title,
+    employee,
+    email,
+    department,
+    course_layout
+CASCADE;
+
+-- Drop sequences (they’re not owned-by columns, so drop explicitly)
+DROP SEQUENCE IF EXISTS
+    person_id_seq,
+    department_id_seq,
+    employee_id_seq,
+    course_layout_id_seq,
+    course_instance_id_seq,
+    study_period_id_seq,
+    teaching_activity_id_seq,
+    job_title_id_seq,
+    skill_id_seq;
+
+-- ===== END CLEANUP =====
