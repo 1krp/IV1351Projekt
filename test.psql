@@ -1,4 +1,0 @@
-\c postgres
-DROP DATABASE iv_db;
-CREATE DATABASE iv_db;
-\c iv_db;
