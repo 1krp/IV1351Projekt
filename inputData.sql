@@ -12,7 +12,8 @@ INSERT INTO course_version (course_layout_id, max_students, min_students, hp) VA
 INSERT INTO person (person_number, first_name, last_name, street, zip, city) VALUES ('5112079999','Anders','Hansen','Gatan 1','123','Staden'),('7112059999','Peter','Hansen','Gatan 2','123','Staden'), ('0412059999','Johan','Hansen','Gatan 3','123','Staden'), ('9912059999','Findus','Hansen','Gatan 4','123','Staden');
 INSERT INTO job_title (job_title) VALUES ('Lecturer'), ('Janitor'), ('Professor'), ('Teacher-assistant'), ('Department-manager');
 INSERT INTO department (department_name, manager, street, zip, city) VALUES ('EECS',null,'Brinellvägen 8','114 28','Stockholm');
-INSERT INTO employee (salary, person_id, job_title_id, manager, department_id) VALUES (30000,2,2,null,2);
+INSERT INTO employee (person_id, job_title_id, manager, department_id) VALUES (2,2,null,2);
+INSERT INTO employee_salary (employee_id, salary_enforcement_date, salary_per_hour) VALUES (2,'2025-06-01',300.0);
 INSERT INTO course_instance (num_students, study_year, course_version_id) VALUES (111,'2025',2),(260,'2025',3),(170,'2025',4),(300,'2025',5);
 INSERT INTO course_instance_study_period (course_instance_id, study_period_id) VALUES (4,2),(4,3),(2,2),(3,2);
 INSERT INTO planned_activity (course_instance_id, planned_hours, activity_id) VALUES (2, 10, 2), (3, 10, 2), (4, 10, 2), (5, 10, 2);

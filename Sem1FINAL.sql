@@ -21,9 +21,9 @@ CREATE TABLE course_layout (
 
 CREATE TABLE course_version (
  id SERIAL PRIMARY KEY,
+ course_layout_id INT NOT NULL,
  max_students INT,
  min_students INT,
- course_layout_id INT NOT NULL,
  hp DOUBLE PRECISION
 );
 
@@ -47,11 +47,18 @@ ALTER TABLE email ADD CONSTRAINT PK_email PRIMARY KEY (email);
 
 CREATE TABLE employee (
  id SERIAL PRIMARY KEY,
- salary DOUBLE PRECISION,
  person_id INT NOT NULL,
  job_title_id INT NOT NULL,
  manager INT,
  department_id INT NOT NULL
+);
+
+
+CREATE TABLE employee_salary (
+ id SERIAL PRIMARY KEY,
+ employee_id INT NOT NULL,
+ salary_enforcement_date DATE NOT NULL,
+ salary_per_hour DOUBLE PRECISION NOT NULL
 );
 
 
@@ -130,11 +137,11 @@ ALTER TABLE course_instance_study_period ADD CONSTRAINT PK_course_instance_study
 
 
 CREATE TABLE employee_skill (
- employee_id INT NOT NULL,
- skill_id INT NOT NULL
+ skill_id INT NOT NULL,
+ employee_id INT NOT NULL
 );
 
-ALTER TABLE employee_skill ADD CONSTRAINT PK_employee_skill PRIMARY KEY (employee_id,skill_id);
+ALTER TABLE employee_skill ADD CONSTRAINT PK_employee_skill PRIMARY KEY (skill_id,employee_id);
 
 
 CREATE TABLE person_phone (
@@ -151,13 +158,15 @@ CREATE TABLE planned_activity (
  activity_id INT NOT NULL
 );
 
+ALTER TABLE planned_activity ADD CONSTRAINT PK_planned_activity PRIMARY KEY (course_instance_id);
+
 
 CREATE TABLE activity_employee (
- employee_id INT NOT NULL,
- course_instance_id INT NOT NULL
+ course_instance_id INT NOT NULL,
+ employee_id INT NOT NULL
 );
 
-ALTER TABLE activity_employee ADD CONSTRAINT PK_activity_employee PRIMARY KEY (employee_id,course_instance_id);
+ALTER TABLE activity_employee ADD CONSTRAINT PK_activity_employee PRIMARY KEY (course_instance_id,employee_id);
 
 
 ALTER TABLE course_version ADD CONSTRAINT FK_course_version_0 FOREIGN KEY (course_layout_id) REFERENCES course_layout (id);
@@ -169,6 +178,9 @@ ALTER TABLE department ADD CONSTRAINT FK_department_0 FOREIGN KEY (manager) REFE
 ALTER TABLE employee ADD CONSTRAINT FK_employee_0 FOREIGN KEY (person_id) REFERENCES person (id);
 ALTER TABLE employee ADD CONSTRAINT FK_employee_1 FOREIGN KEY (job_title_id) REFERENCES job_title (id);
 ALTER TABLE employee ADD CONSTRAINT FK_employee_2 FOREIGN KEY (department_id) REFERENCES department (id);
+
+
+ALTER TABLE employee_salary ADD CONSTRAINT FK_employee_salary_0 FOREIGN KEY (employee_id) REFERENCES employee (id);
 
 
 ALTER TABLE person_email ADD CONSTRAINT FK_person_email_0 FOREIGN KEY (person_id) REFERENCES person (id) ON DELETE CASCADE;
@@ -195,10 +207,15 @@ ALTER TABLE planned_activity ADD CONSTRAINT FK_planned_activity_1 FOREIGN KEY (a
 
 
 ALTER TABLE activity_employee ADD CONSTRAINT FK_activity_employee_0 FOREIGN KEY (employee_id) REFERENCES employee (id) ON DELETE SET NULL;
-ALTER TABLE activity_employee ADD CONSTRAINT FK_activity_employee_1 FOREIGN KEY (course_instance_id) REFERENCES planned_activity (id) ON DELETE SET NULL;
+ALTER TABLE activity_employee ADD CONSTRAINT FK_activity_employee_1 FOREIGN KEY (course_instance_id) REFERENCES planned_activity (course_instance_id) ON DELETE SET NULL;
 
 
 -- SET UP SERIAL ID GENERATORS --
+
+ALTER TABLE employee_salary
+ALTER COLUMN id
+SET DEFAULT nextval('employee_salary_id_seq');
+SELECT setval('employee_salary_id_seq', COALESCE((SELECT MAX(id) FROM employee_salary), 1));
 
 ALTER TABLE activity_constants
 ALTER COLUMN id
