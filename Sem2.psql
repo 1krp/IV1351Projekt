@@ -5,10 +5,10 @@ CREATE DATABASE iv_db;
 
 CREATE TABLE activity_constants (
  id SERIAL PRIMARY KEY,
- activity_name VARCHAR(100),
- fixed_hours INT,
- hp_factor DOUBLE PRECISION,
- students_factor DOUBLE PRECISION
+ activity_name VARCHAR(100) NOT NULL,
+ fixed_hours INT NOT NULL,
+ hp_factor DOUBLE PRECISION NOT NULL,
+ students_factor DOUBLE PRECISION NOT NULL
 );
 
 
@@ -22,9 +22,9 @@ CREATE TABLE course_layout (
 CREATE TABLE course_version (
  id SERIAL PRIMARY KEY,
  course_layout_id INT NOT NULL,
- max_students INT,
- min_students INT,
- hp DOUBLE PRECISION
+ max_students INT NOT NULL,
+ min_students INT NOT NULL,
+ hp DOUBLE PRECISION NOT NULL
 );
 
 
@@ -32,9 +32,9 @@ CREATE TABLE department (
  id SERIAL PRIMARY KEY,
  department_name VARCHAR(500) NOT NULL,
  manager INT,
- street VARCHAR(100),
- zip VARCHAR(10),
- city VARCHAR(100)
+ street VARCHAR(100) NOT NULL,
+ zip VARCHAR(10) NOT NULL,
+ city VARCHAR(100) NOT NULL
 );
 
 
@@ -79,9 +79,9 @@ CREATE TABLE person (
  person_number VARCHAR(12) NOT NULL,
  first_name VARCHAR(500) NOT NULL,
  last_name VARCHAR(500) NOT NULL,
- street VARCHAR(500),
- zip VARCHAR(50),
- city VARCHAR(50)
+ street VARCHAR(500) NOT NULL,
+ zip VARCHAR(50) NOT NULL,
+ city VARCHAR(50) NOT NULL
 );
 
 
@@ -102,8 +102,8 @@ ALTER TABLE phone ADD CONSTRAINT PK_phone PRIMARY KEY (phone_number);
 
 CREATE TABLE skill (
  id SERIAL PRIMARY KEY,
- name VARCHAR(500),
- description VARCHAR(500)
+ name VARCHAR(500) NOT NULL,
+ description VARCHAR(500) NOT NULL
 );
 
 
@@ -115,14 +115,14 @@ CREATE TABLE study_period (
 
 CREATE TABLE teaching_activity (
  id SERIAL PRIMARY KEY,
- activity VARCHAR(100),
- factor DOUBLE PRECISION
+ activity_name VARCHAR(100) NOT NULL,
+ factor DOUBLE PRECISION NOT NULL
 );
 
 
 CREATE TABLE course_instance (
  id SERIAL PRIMARY KEY,
- num_students INT,
+ num_students INT NOT NULL,
  study_year VARCHAR(4) NOT NULL,
  course_version_id INT NOT NULL
 );
@@ -153,20 +153,12 @@ ALTER TABLE person_phone ADD CONSTRAINT PK_person_phone PRIMARY KEY (person_id,p
 
 
 CREATE TABLE planned_activity (
+ id SERIAL PRIMARY KEY,
+ employee_id INT NOT NULL,
  course_instance_id INT NOT NULL,
  planned_hours INT NOT NULL,
  activity_id INT NOT NULL
 );
-
-ALTER TABLE planned_activity ADD CONSTRAINT PK_planned_activity PRIMARY KEY (course_instance_id);
-
-
-CREATE TABLE activity_employee (
- course_instance_id INT NOT NULL,
- employee_id INT NOT NULL
-);
-
-ALTER TABLE activity_employee ADD CONSTRAINT PK_activity_employee PRIMARY KEY (course_instance_id,employee_id);
 
 
 ALTER TABLE course_version ADD CONSTRAINT FK_course_version_0 FOREIGN KEY (course_layout_id) REFERENCES course_layout (id);
@@ -194,17 +186,14 @@ ALTER TABLE course_instance_study_period ADD CONSTRAINT FK_course_instance_study
 ALTER TABLE course_instance_study_period ADD CONSTRAINT FK_course_instance_study_period_1 FOREIGN KEY (course_instance_id) REFERENCES course_instance (id);
 
 
-ALTER TABLE employee_skill ADD CONSTRAINT FK_employee_skill_0 FOREIGN KEY (employee_id) REFERENCES employee (id) ON DELETE SET NULL;
-ALTER TABLE employee_skill ADD CONSTRAINT FK_employee_skill_1 FOREIGN KEY (skill_id) REFERENCES skill (id) ON DELETE SET NULL;
+ALTER TABLE employee_skill ADD CONSTRAINT FK_employee_skill_0 FOREIGN KEY (skill_id) REFERENCES skill (id) ON DELETE SET NULL;
+ALTER TABLE employee_skill ADD CONSTRAINT FK_employee_skill_1 FOREIGN KEY (employee_id) REFERENCES employee (id) ON DELETE SET NULL;
 
 
 ALTER TABLE person_phone ADD CONSTRAINT FK_person_phone_0 FOREIGN KEY (person_id) REFERENCES person (id) ON DELETE CASCADE;
 ALTER TABLE person_phone ADD CONSTRAINT FK_person_phone_1 FOREIGN KEY (phone_number) REFERENCES phone (phone_number) ON DELETE CASCADE;
 
 
-ALTER TABLE planned_activity ADD CONSTRAINT FK_planned_activity_0 FOREIGN KEY (course_instance_id) REFERENCES course_instance (id);
-ALTER TABLE planned_activity ADD CONSTRAINT FK_planned_activity_1 FOREIGN KEY (activity_id) REFERENCES teaching_activity (id);
-
-
-ALTER TABLE activity_employee ADD CONSTRAINT FK_activity_employee_0 FOREIGN KEY (employee_id) REFERENCES employee (id) ON DELETE SET NULL;
-ALTER TABLE activity_employee ADD CONSTRAINT FK_activity_employee_1 FOREIGN KEY (course_instance_id) REFERENCES planned_activity (course_instance_id) ON DELETE SET NULL;
+ALTER TABLE planned_activity ADD CONSTRAINT FK_planned_activity_0 FOREIGN KEY (employee_id) REFERENCES employee (id);
+ALTER TABLE planned_activity ADD CONSTRAINT FK_planned_activity_1 FOREIGN KEY (course_instance_id) REFERENCES course_instance (id);
+ALTER TABLE planned_activity ADD CONSTRAINT FK_planned_activity_2 FOREIGN KEY (activity_id) REFERENCES teaching_activity (id);
