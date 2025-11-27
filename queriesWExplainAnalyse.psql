@@ -1,4 +1,6 @@
--- Task 1--
+----------
+--Task 1--
+----------
 EXPLAIN ANALYSE WITH paJta AS(
     SELECT course_instance_id, 
             SUM(CASE WHEN activity_name = 'Lecture' THEN planned_hours ELSE 0 END) AS lecture_hours,
@@ -42,9 +44,11 @@ EXPLAIN ANALYSE WITH paJta AS(
 )
     SELECT *
     FROM task1view
-    
---Task 2--
 
+
+----------
+--Task 2--
+----------
 
 EXPLAIN ANALYSE WITH paJta AS(
     SELECT course_instance_id, 
@@ -95,8 +99,9 @@ SELECT *
 FROM task2view
 
 
-
+----------
 --Task 3--
+----------
 EXPLAIN ANALYSE WITH paJta AS(
     SELECT course_instance_id, 
         SUM(CASE WHEN activity_name = 'Lecture' THEN planned_hours*factor ELSE 0 END) AS lecture_hours,
@@ -161,8 +166,9 @@ EXPLAIN ANALYSE WITH paJta AS(
 SELECT * 
 FROM task3view
 
-
+----------
 --Task 4--
+----------
 EXPLAIN ANALYSE SELECT 
     e.id eid, 
     p.first_name, 
