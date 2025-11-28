@@ -167,7 +167,7 @@ SELECT
     e.id eid, 
     p.first_name, 
     sp.period_name,
-    COUNT(DISTINCT ci.id)
+    COUNT(DISTINCT ci.id) courses_per_period
 FROM employee e
 JOIN person p ON p.id=e.person_id
 JOIN planned_activity pa ON pa.employee_id=e.id
