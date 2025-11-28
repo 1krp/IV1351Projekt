@@ -1,8 +1,11 @@
 -------------------------------------------
 -- 1) Planned hours per course instance ---
 -------------------------------------------
--- Original Planning Time AVG: 0.101 ms ---
--- Original Execution Time AVG: 0.071 ms --
+-- Original Planning Time AVG: 0.093 ms ---
+-- Original Execution Time AVG: 0.090 ms --
+-------------------------------------------
+-- Indices Planning Time AVG: 0.120 ms ----
+-- Indices Execution Time AVG: 0.065 ms ---
 EXPLAIN ANALYSE SELECT ci.id ciid, SUM(pa.planned_hours) planned_hours
 FROM course_instance ci
 JOIN planned_activity pa ON pa.course_instance_id=ci.id
@@ -12,8 +15,11 @@ GROUP BY ci.id
 ---------------------------------------------------------------
 -- 2) Actual allocated hours per teacher per course instance --
 ---------------------------------------------------------------
--- Original Planning Time AVG: 0.145 ms -----------------------
--- Original Execution Time AVG: 0.118 ms ----------------------
+-- Original Planning Time AVG: 0.160 ms -----------------------
+-- Original Execution Time AVG: 0.180 ms ----------------------
+---------------------------------------------------------------
+-- Indices Planning Time AVG: 0.230 ms ------------------------
+-- Indices Execution Time AVG: 0.140 ms -----------------------
 EXPLAIN ANALYSE SELECT ci.id ciid, p.first_name, SUM(pa.allocated_hours)
 FROM course_instance ci
 JOIN planned_activity pa ON pa.course_instance_id=ci.id
@@ -25,8 +31,11 @@ GROUP BY ci.id, p.first_name
 -------------------------------------------
 -- 3) Teacher load per period -------------
 -------------------------------------------
--- Original Planning Time AVG: 0.450 ms ---
--- Original Execution Time AVG: 0.150 ms --
+-- Original Planning Time AVG: 0.470 ms ---
+-- Original Execution Time AVG: 0.320 ms --
+-------------------------------------------
+-- Indices Planning Time AVG: 0.590 ms ----
+-- Indices Execution Time AVG: 0.220 ms ---
 EXPLAIN ANALYSE SELECT 
     e.id eid, 
     p.first_name, 
@@ -45,25 +54,38 @@ ORDER BY sp.period_name
 ---------------------------------------------------------------
 -- 4) Course instances with planned vs actual variance > 15% --
 ---------------------------------------------------------------
--- Original Planning Time AVG: 0.101 ms -----------------------
--- Original Execution Time AVG: 0.078 ms ----------------------
-WITH planned_v_allocated AS(
-    SELECT ci.id ciid, SUM(pa.planned_hours) ph, SUM(pa.allocated_hours) ah
+-- Original Planning Time AVG: 0.130 ms -----------------------
+-- Original Execution Time AVG: 0.110 ms ----------------------
+---------------------------------------------------------------
+-- Indices Planning Time AVG: 0.150 ms ------------------------
+-- Indices Execution Time AVG: 0.080 ms -----------------------
+EXPLAIN ANALYSE WITH planned_v_allocated AS (
+    SELECT 
+        ci.id AS ciid, 
+        SUM(pa.planned_hours)  AS ph, 
+        SUM(pa.allocated_hours) AS ah
     FROM planned_activity pa
-    JOIN course_instance ci ON ci.id=pa.course_instance_id
+    JOIN course_instance ci ON ci.id = pa.course_instance_id
     GROUP BY ci.id
 )
-SELECT pva.ciid
+SELECT 
+    pva.ciid, 
+    pva.ah AS allocated, 
+    pva.ph AS planned, 
+    ROUND((pva.ah::numeric / pva.ph::numeric), 2) AS ah_ph_quota
 FROM planned_v_allocated pva
-WHERE pva.ah / pva.ph > 1.15 OR pva.ah / pva.ph < 0.85
+WHERE (pva.ah::numeric / pva.ph::numeric) > 1.15 OR (pva.ah::numeric / pva.ph::numeric) < 0.85
 
 --------------------------------------------------------------------
 -- 5) Teachers allocated to more than N courses in current period --
 --------------------------------------------------------------------
 -- N = employment_constants.max_courses ----------------------------
--- Original Planning Time AVG: 0.550 ms ----------------------------
--- Original Execution Time AVG: 0.180 ms ---------------------------
-WITH courses_per_period AS (
+-- Original Planning Time AVG: 0.514 ms ----------------------------
+-- Original Execution Time AVG: 0.350 ms ---------------------------
+--------------------------------------------------------------------
+-- Indices Planning Time AVG: 0.630 ms -----------------------------
+-- Indices Execution Time AVG: 0.270 ms ----------------------------
+EXPLAIN ANALYSE WITH courses_per_period AS (
     SELECT 
         p.first_name, 
         sp.period_name,

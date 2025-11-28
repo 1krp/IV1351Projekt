@@ -92,7 +92,7 @@ WITH paJta AS(
     --GROUP BY course_code, ci.id, hp, first_name, last_name, designation, lecture_hours, seminar_hours, lab_hours, tutorial_hours, other_hours, exam, admin, total_hours 
 )
 SELECT * 
-FROM task2view
+FROM task2view ORDER BY ciid;
 
 
 
@@ -165,7 +165,8 @@ FROM task3view
 --Task 4--
 SELECT 
     e.id eid, 
-    p.first_name, 
+    p.first_name,
+    p.last_name, 
     sp.period_name,
     COUNT(DISTINCT ci.id) courses_per_period
 FROM employee e
@@ -174,5 +175,5 @@ JOIN planned_activity pa ON pa.employee_id=e.id
 JOIN course_instance ci ON pa.course_instance_id=ci.id
 JOIN course_instance_study_period cisp ON ci.id=cisp.course_instance_id
 JOIN study_period sp ON sp.id=cisp.study_period_id
-GROUP BY e.id, sp.period_name, p.first_name
-ORDER BY sp.period_name
+GROUP BY e.id, sp.period_name, p.first_name, p.last_name
+ORDER BY p.last_name, p.first_name

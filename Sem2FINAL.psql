@@ -199,4 +199,82 @@ ALTER TABLE planned_activity ADD CONSTRAINT FK_planned_activity_0 FOREIGN KEY (e
 ALTER TABLE planned_activity ADD CONSTRAINT FK_planned_activity_1 FOREIGN KEY (course_instance_id) REFERENCES course_instance (id);
 ALTER TABLE planned_activity ADD CONSTRAINT FK_planned_activity_2 FOREIGN KEY (activity_id) REFERENCES teaching_activity (id);
 
+CREATE VIEW course_instance_extended AS
+    SELECT
+        ci.id ciid,
+        ci.study_year,
+        cl.course_code,
+        cl.course_name,
+        cv.hp,
+        ci.num_students,
+        cJsp.period_name
+    FROM
+        course_instance ci
+        LEFT JOIN course_version cv ON ci.course_version_id = cv.id
+        LEFT JOIN course_layout cl ON cv.course_layout_id = cl.id
+        LEFT JOIN (
+            SELECT
+                cisp.course_instance_id cid,
+                sp.period_name
+            FROM
+                course_instance_study_period cisp
+                JOIN study_period sp ON cisp.study_period_id = sp.id
+            ) cJsp
+            ON ci.id = cJsp.cid;
 
+CREATE VIEW exam_admin_hours AS
+    SELECT
+        DISTINCT
+        ciai.ciid ciid,
+        (
+            SELECT ac.fixed_hours + ac.students_factor * ciai.num_students
+            FROM activity_constants ac
+            WHERE ac.activity_name = 'EXAM'
+        ) exam_hours,
+        (
+            SELECT ac.hp_factor * ciai.hp + ac.fixed_hours + ac.students_factor * ciai.num_students
+            FROM activity_constants ac
+            WHERE ac.activity_name = 'ADMIN'
+        ) admin_hours
+    FROM 
+        course_instance_extended ciai;
+
+CREATE VIEW planned_activity_extended AS
+    SELECT 
+        pa.id,
+        pa.course_instance_id ciid,
+        pa.employee_id eid,
+        empExt.first_name, 
+        empExt.job_title, 
+        ta.activity_name activity,
+        (pa.planned_hours * ta.factor) total_hours
+    FROM planned_activity pa 
+    JOIN teaching_activity ta ON pa.activity_id = ta.id
+    JOIN (
+        SELECT
+            e.*, 
+            p.first_name, 
+            jt.job_title
+        FROM
+            employee e 
+            JOIN person p ON e.person_id = p.id
+            JOIN job_title jt ON e.job_title_id = jt.id
+        ) empExt
+        ON pa.employee_id = empExt.id;
+
+CREATE VIEW admin_and_exam_hours_per_employee_and_course AS
+    SELECT
+        a.ciid,
+        e.num_employees,
+        ROUND((a.admin_hours / e.num_employees)::numeric, 2) AS admin_hours_per_employee,
+        ROUND((a.exam_hours  / e.num_employees)::numeric, 2) AS exam_hours_per_employee
+    FROM exam_admin_hours a
+    JOIN (
+        SELECT
+            ciid,
+            COUNT(DISTINCT eid) as num_employees
+        FROM planned_activity_extended
+        GROUP BY ciid
+        ORDER BY ciid
+    ) e
+        ON a.ciid = e.ciid;
