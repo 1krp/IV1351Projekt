@@ -6,7 +6,7 @@
 -------------------------------------------
 -- Indices Planning Time AVG: 0.120 ms ----
 -- Indices Execution Time AVG: 0.065 ms ---
-EXPLAIN ANALYSE SELECT ci.id ciid, SUM(pa.planned_hours) planned_hours
+SELECT ci.id ciid, SUM(pa.planned_hours) planned_hours
 FROM course_instance ci
 JOIN planned_activity pa ON pa.course_instance_id=ci.id
 GROUP BY ci.id
