@@ -161,7 +161,7 @@ EXPLAIN ANALYSE WITH paJta AS(
     CROSS JOIN activity_constants ac
     GROUP BY ci.id
 )
-SELECT DISTINCT
+SELECT
     cl.course_code, 
     ci.id ciid, 
     cv.hp,
@@ -176,18 +176,16 @@ SELECT DISTINCT
    eah.admin_hours,
     eah.exam_hours,
     (eah.exam_hours + eah.admin_hours + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + pajta.tutorial_hours + paJta.other_hours) total_hours
-FROM employee e
-JOIN planned_activity pa ON e.id=pa.employee_id
-JOIN course_instance ci ON ci.id=pa.course_instance_id AND ci.study_year='2025' -- what year to look at
+FROM paJta
+JOIN course_instance ci ON ci.id=paJta.course_instance_id AND ci.study_year='2025' -- what year to look at
 JOIN course_version cv ON ci.course_version_id=cv.id 
 JOIN course_layout cl ON cl.id=cv.course_layout_id 
 LEFT JOIN (
     course_instance_study_period cisp
     JOIN study_period sp ON cisp.study_period_id=sp.id) 
     ON cisp.course_instance_id=ci.id
-JOIN person p ON e.person_id=p.id
-JOIN paJta ON paJta.course_instance_id=ci.id
-JOIN examAdminHrs eah ON eah.ciid=ci.id
+JOIN examAdminHrs eah ON paJta.course_instance_id= eah.ciid
+ORDER BY ciid, sp.period_name
 
 
 
