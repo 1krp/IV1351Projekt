@@ -1,11 +1,11 @@
 -------------------------------------------
 -- 1) Planned hours per course instance ---
 -------------------------------------------
--- Original Planning Time AVG: 1.250 ms ---
--- Original Execution Time AVG: 0.440 ms --
+-- Original Planning Time AVG: 0.800 ms ---
+-- Original Execution Time AVG: 7.440 ms --
 -------------------------------------------
--- Indices Planning Time AVG: 1.240 ms ----
--- Indices Execution Time AVG: 0.420 ms ---
+-- Indices Planning Time AVG: 1.040 ms ----
+-- Indices Execution Time AVG: 6.200 ms ---
 EXPLAIN ANALYSE WITH paJta AS(
     SELECT course_instance_id, 
             SUM(CASE WHEN activity_name = 'Lecture' THEN planned_hours * factor ELSE 0 END) AS lecture_hours,
@@ -54,11 +54,11 @@ EXPLAIN ANALYSE WITH paJta AS(
 ---------------------------------------------------------------
 -- 2) Actual allocated hours per teacher per course instance --
 ---------------------------------------------------------------
--- Original Planning Time AVG: 1.600 ms -----------------------
--- Original Execution Time AVG: 0.870 ms ----------------------
+-- Original Planning Time AVG: 1.090 ms -----------------------
+-- Original Execution Time AVG: 27.686 ms ----------------------
 ---------------------------------------------------------------
--- Indices Planning Time AVG: 2.230 ms ------------------------
--- Indices Execution Time AVG: 0.740 ms -----------------------
+-- Indices Planning Time AVG: 1.320 ms ------------------------
+-- Indices Execution Time AVG: 25.750 ms -----------------------
 EXPLAIN ANALYSE WITH paJta AS(
     SELECT course_instance_id, 
         SUM(CASE WHEN activity_name = 'Lecture' THEN allocated_hours * factor ELSE 0 END) AS lecture_hours,
@@ -116,7 +116,7 @@ EXPLAIN ANALYSE WITH paJta AS(
 -- 2) Actual allocated hours per teacher per course instance --
 ---------------------------------------------------------------
 -- Planning Time: 0.030 ms ------------------------------------
--- Execution Time: 0.012 ms -----------------------------------
+-- Execution Time: 0.600 ms -----------------------------------
 
 EXPLAIN ANALYSE SELECT * FROM teacher_allocated_hours_summary
 
@@ -124,11 +124,11 @@ EXPLAIN ANALYSE SELECT * FROM teacher_allocated_hours_summary
 -------------------------------------------
 -- 3) Teacher load per period -------------
 -------------------------------------------
--- Original Planning Time AVG: 1.650 ms ---
--- Original Execution Time AVG: 1.100 ms --
+-- Original Planning Time AVG: 2.500 ms ---
+-- Original Execution Time AVG: 41.330 ms --
 -------------------------------------------
--- Indices Planning Time AVG: 2.000 ms ----
--- Indices Execution Time AVG: 0.900 ms ---
+-- Indices Planning Time AVG: 1.450 ms ----
+-- Indices Execution Time AVG: 38.200 ms ---
 EXPLAIN ANALYSE WITH paJta AS(
     SELECT course_instance_id, 
         SUM(CASE WHEN activity_name = 'Lecture' THEN planned_hours*factor ELSE 0 END) AS lecture_hours,
@@ -199,11 +199,11 @@ FROM task3view ORDER BY ciid;
 -- 4) Course instances with planned vs actual variance > 15% --
 ---------------------------------------------------------------
 -- Original Planning Time AVG: 0.130 ms -----------------------
--- Original Execution Time AVG: 0.110 ms ----------------------
+-- Original Execution Time AVG: 2.800 ms ----------------------
 ---------------------------------------------------------------
--- Indices Planning Time AVG: 0.150 ms ------------------------
--- Indices Execution Time AVG: 0.080 ms -----------------------
-EXPLAIN ANALYSE WITH planned_v_allocated AS (
+-- Indices Planning Time AVG: 0.190 ms ------------------------
+-- Indices Execution Time AVG: 2.877 ms -----------------------
+WITH planned_v_allocated AS (
     SELECT 
         ci.id AS ciid, 
         SUM(pa.planned_hours)  AS ph, 
@@ -224,11 +224,11 @@ WHERE (pva.ah::numeric / pva.ph::numeric) > 1.15 OR (pva.ah::numeric / pva.ph::n
 -- 5) Teachers allocated to more than N courses in current period --
 --------------------------------------------------------------------
 -- N = employment_constants.max_courses ----------------------------
--- Original Planning Time AVG: 0.514 ms ----------------------------
--- Original Execution Time AVG: 0.260 ms ---------------------------
+-- Original Planning Time AVG: 0.400 ms ----------------------------
+-- Original Execution Time AVG: 5.300 ms ---------------------------
 --------------------------------------------------------------------
 -- Indices Planning Time AVG: 0.600 ms -----------------------------
--- Indices Execution Time AVG: 0.220 ms ----------------------------
+-- Indices Execution Time AVG: 5.700 ms ----------------------------
 EXPLAIN ANALYSE SELECT 
     e.id eid, 
     p.first_name, 
@@ -251,6 +251,6 @@ ORDER BY sp.period_name
 --------------------------------------------------------------------
 -- N = employment_constants.max_courses ----------------------------
 -- Planning Time: 0.030 ms ------------------------------------
--- Execution Time: 0.012 ms -----------------------------------
+-- Execution Time: 0.030 ms -----------------------------------
 
 EXPLAIN ANALYSE SELECT * FROM courses_per_employee
