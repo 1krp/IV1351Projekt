@@ -104,6 +104,69 @@ WITH paJta AS(
 
 --Task 3--
 
+-- CLEANED VERSION --
+
+WITH paJta AS(
+    SELECT course_instance_id, p.first_name, p.last_name,
+        SUM(CASE WHEN activity_name = 'Lecture' THEN pa.allocated_hours * factor ELSE 0 END) AS lecture_hours,
+        SUM(CASE WHEN activity_name = 'Seminar' THEN pa.allocated_hours * factor ELSE 0 END) AS seminar_hours,
+        SUM(CASE WHEN activity_name = 'Lab' THEN pa.allocated_hours * factor ELSE 0 END) AS lab_hours,
+        SUM(CASE WHEN activity_name = 'Tutorial' THEN pa.allocated_hours * factor ELSE 0 END) AS tutorial_hours,
+        SUM(CASE WHEN activity_name = 'Other' THEN pa.allocated_hours * factor ELSE 0 END) AS other_hours
+    FROM planned_activity pa
+    JOIN teaching_activity ta ON pa.activity_id=ta.id
+    JOIN employee e ON pa.employee_id = e.id AND e.id = 1 -- what teacher to look at ( 1 = Martin Holm )
+    JOIN person p ON p.id=e.person_id
+    GROUP BY course_instance_id, p.first_name, p.last_name
+), ci_num_e AS(
+    SELECT
+        pa.course_instance_id, sp.period_name,
+        COUNT(DISTINCT employee_id) AS num_employees
+    FROM planned_activity pa
+    JOIN teaching_activity ta ON pa.activity_id=ta.id
+    JOIN employee e ON e.id=pa.employee_id 
+    JOIN course_instance ci ON ci.id=pa.course_instance_id
+    JOIN course_instance_study_period cisp ON cisp.course_instance_id=ci.id
+    JOIN study_period sp ON cisp.study_period_id=sp.id
+    GROUP BY pa.course_instance_id, sp.period_name
+), examAdminHrs AS(
+    SELECT ci.id ciid,  
+        ROUND((SUM(CASE WHEN activity_name = 'EXAM' THEN (fixed_hours + hp_factor*hp + num_students*students_factor)/ne.num_employees ELSE 0 END))::numeric, 2) exam_hours,
+        ROUND((SUM(CASE WHEN activity_name = 'ADMIN' THEN (fixed_hours + hp_factor*hp + num_students*students_factor)/ne.num_employees ELSE 0 END))::numeric, 2) admin_hours
+    From course_instance ci
+    JOIN course_version cv ON ci.course_version_id=cv.id
+    JOIN ci_num_e ne ON ne.course_instance_id=ci.id 
+    CROSS JOIN activity_constants ac
+    GROUP BY ci.id
+)
+SELECT
+    cl.course_code, 
+    ci.id ciid, 
+    cv.hp,
+    sp.period_name,
+    paJta.first_name,
+    paJta.last_name,
+    paJta.lecture_hours,
+    paJta.tutorial_hours,
+    paJta.lab_hours,
+    paJta.seminar_hours,    
+    paJta.other_hours,
+   eah.admin_hours,
+    eah.exam_hours,
+    (eah.exam_hours + eah.admin_hours + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + pajta.tutorial_hours + paJta.other_hours) total_hours
+FROM paJta
+JOIN course_instance ci ON ci.id=paJta.course_instance_id AND ci.study_year='2025' -- what year to look at
+JOIN course_version cv ON ci.course_version_id=cv.id 
+JOIN course_layout cl ON cl.id=cv.course_layout_id 
+LEFT JOIN (
+    course_instance_study_period cisp
+    JOIN study_period sp ON cisp.study_period_id=sp.id) 
+    ON cisp.course_instance_id=ci.id
+JOIN examAdminHrs eah ON paJta.course_instance_id= eah.ciid
+ORDER BY ciid, sp.period_name
+
+-- OLD VERSION --
+
 WITH paJta AS(
     SELECT course_instance_id, p.first_name, p.last_name,
         SUM(CASE WHEN activity_name = 'Lecture' THEN pa.allocated_hours * factor ELSE 0 END) AS lecture_hours,
@@ -164,6 +227,7 @@ LEFT JOIN (
 JOIN person p ON e.person_id=p.id
 JOIN paJta ON paJta.course_instance_id=ci.id
 JOIN examAdminHrs eah ON eah.ciid=ci.id
+ORDER BY ciid, sp.period_name
 
 
 --Task 4--
