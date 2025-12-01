@@ -200,7 +200,7 @@ JOIN examAdminHrs eah ON eah.ciid=ci.id
 ---------------------------------------------------------------
 -- Indices Planning Time AVG: 0.190 ms ------------------------
 -- Indices Execution Time AVG: 2.877 ms -----------------------
-WITH planned_v_allocated AS (
+EXPLAIN ANALYSE WITH planned_v_allocated AS (
     SELECT 
         ci.id AS ciid, 
         SUM(pa.planned_hours)  AS ph, 
