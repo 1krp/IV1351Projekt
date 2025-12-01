@@ -136,38 +136,36 @@ WITH paJta AS(
     JOIN ci_num_e ne ON ne.course_instance_id=ci.id 
     CROSS JOIN activity_constants ac
     GROUP BY ci.id
-), task3view AS(
-    SELECT DISTINCT
-        cl.course_code, 
-        ci.id ciid, 
-        cv.hp,
-        sp.period_name,
-        p.first_name,
-        p.last_name,
-        paJta.lecture_hours,
-        paJta.tutorial_hours,
-        paJta.lab_hours,
-        paJta.seminar_hours,    
-        paJta.other_hours,
-        eah.admin_hours,
-        eah.exam_hours,
-        (eah.exam_hours + eah.admin_hours + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + pajta.tutorial_hours + paJta.other_hours) total_hours
-    FROM course_instance ci 
-    JOIN course_version cv ON ci.course_version_id=cv.id AND ci.study_year='2025'
-    JOIN course_layout cl ON cl.id=cv.course_layout_id 
-    LEFT JOIN (
-        course_instance_study_period cisp
-        JOIN study_period sp ON cisp.study_period_id=sp.id) 
-        ON cisp.course_instance_id=ci.id
-    JOIN planned_activity pa ON ci.id=pa.course_instance_id
-    JOIN employee e ON pa.employee_id=e.id AND pa.employee_id = 1 -- what teacher to look at
-    JOIN person p ON e.person_id=p.id
-    JOIN paJta ON paJta.course_instance_id=ci.id
-    JOIN examAdminHrs eah ON eah.ciid=ci.id
-    ORDER BY p.first_name
 )
-SELECT * 
-FROM task3view ORDER BY ciid;
+SELECT DISTINCT
+    cl.course_code, 
+    ci.id ciid, 
+    cv.hp,
+    sp.period_name,
+    p.first_name,
+    p.last_name,
+    paJta.lecture_hours,
+    paJta.tutorial_hours,
+    paJta.lab_hours,
+    paJta.seminar_hours,    
+    paJta.other_hours,
+   eah.admin_hours,
+    eah.exam_hours,
+    (eah.exam_hours + eah.admin_hours + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + pajta.tutorial_hours + paJta.other_hours) total_hours
+FROM employee e
+JOIN planned_activity pa ON pa.employee_id = e.id AND e.id = 1 -- what teacher to look at
+JOIN course_instance ci ON ci.id=pa.course_instance_id AND ci.study_year='2025' -- what year to look at
+JOIN course_version cv ON ci.course_version_id=cv.id 
+JOIN course_layout cl ON cl.id=cv.course_layout_id 
+LEFT JOIN (
+    course_instance_study_period cisp
+    JOIN study_period sp ON cisp.study_period_id=sp.id) 
+    ON cisp.course_instance_id=ci.id
+JOIN person p ON e.person_id=p.id
+JOIN paJta ON paJta.course_instance_id=ci.id
+JOIN examAdminHrs eah ON eah.ciid=ci.id
+ORDER BY p.first_name
+
 
 
 -- With exam admin hours view --
@@ -183,7 +181,7 @@ WITH paJta AS(
     JOIN teaching_activity ta ON pa.activity_id=ta.id
     GROUP BY course_instance_id
 ), task3view AS(
-    SELECT DISTINCT
+    SELECT
         cl.course_code, 
         ci.id ciid, 
         cv.hp,
@@ -198,9 +196,9 @@ WITH paJta AS(
         eah.exam_hours_per_employee,
         eah.admin_hours_per_employee,
         (eah.exam_hours_per_employee + eah.admin_hours_per_employee + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + pajta.tutorial_hours + paJta.other_hours) total_hours
-    FROM course_version cv
+    FROM course_instance ci
+    JOIN course_version cv ON ci.course_version_id=cv.id AND ci.study_year = '2025' -- what year to look at
     JOIN course_layout cl ON cl.id=cv.course_layout_id
-    JOIN course_instance ci ON ci.course_version_id=cv.id AND ci.study_year = '2025'
     JOIN paJta ON paJta.course_instance_id=ci.id
     JOIN admin_and_exam_hours_per_employee_and_course eah ON eah.ciid=ci.id
     JOIN planned_activity pa ON ci.id=pa.course_instance_id
@@ -210,6 +208,8 @@ WITH paJta AS(
 )
 SELECT * 
 FROM task3view
+
+SELECT * FROM admin_and_exam_hours_per_employee_and_course;
 
 
 --Task 4--
