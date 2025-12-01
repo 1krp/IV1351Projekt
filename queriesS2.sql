@@ -34,7 +34,7 @@ WITH paJta AS(
         paJta.other_hours,
         eah.exam,
         eah.admin,
-        (eah.exam + eah.admin + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + tutorial_hours + paJta.other_hours) total_hours
+        (eah.exam + eah.admin + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + pajta.tutorial_hours + paJta.other_hours) total_hours
     FROM course_version cv
     JOIN course_layout cl ON cl.id=cv.course_layout_id
     JOIN course_instance ci ON ci.course_version_id=cv.id AND ci.study_year = '2025'
@@ -89,7 +89,7 @@ WITH paJta AS(
         paJta.other_hours,
         eah.exam_hours,
         eah.admin_hours,
-        (eah.exam_hours + eah.admin_hours + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + tutorial_hours + paJta.other_hours) total_hours
+        (eah.exam_hours + eah.admin_hours + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + pajta.tutorial_hours + paJta.other_hours) total_hours
     FROM course_instance ci 
     JOIN course_version cv ON ci.course_version_id=cv.id AND ci.study_year = '2025'
     JOIN course_layout cl ON cl.id=cv.course_layout_id
@@ -151,7 +151,7 @@ WITH paJta AS(
         paJta.other_hours,
         eah.admin_hours,
         eah.exam_hours,
-        (eah.exam_hours + eah.admin_hours + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + tutorial_hours + paJta.other_hours) total_hours
+        (eah.exam_hours + eah.admin_hours + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + pajta.tutorial_hours + paJta.other_hours) total_hours
     FROM course_instance ci 
     JOIN course_version cv ON ci.course_version_id=cv.id AND ci.study_year='2025'
     JOIN course_layout cl ON cl.id=cv.course_layout_id 
@@ -197,7 +197,7 @@ WITH paJta AS(
         paJta.other_hours,
         eah.exam_hours_per_employee,
         eah.admin_hours_per_employee,
-        (eah.exam_hours_per_employee + eah.admin_hours_per_employee + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + tutorial_hours + paJta.other_hours) total_hours
+        (eah.exam_hours_per_employee + eah.admin_hours_per_employee + paJta.lecture_hours + paJta.seminar_hours + paJta.lab_hours + pajta.tutorial_hours + paJta.other_hours) total_hours
     FROM course_version cv
     JOIN course_layout cl ON cl.id=cv.course_layout_id
     JOIN course_instance ci ON ci.course_version_id=cv.id AND ci.study_year = '2025'
