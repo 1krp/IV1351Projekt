@@ -27,10 +27,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import se.kth.iv1351.bankjdbc.DTO.TeachingCostDTO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.model.RejectedException;
+import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 
 /**
  * This is the application's only controller, all calls to the model pass here.

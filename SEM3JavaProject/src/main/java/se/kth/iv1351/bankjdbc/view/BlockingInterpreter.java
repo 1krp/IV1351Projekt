@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import se.kth.iv1351.bankjdbc.controller.Controller;
-import se.kth.iv1351.bankjdbc.DTO.TeachingCostDTO;
+import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 
 /**
  * Reads and interprets user commands. This command interpreter is blocking, the user

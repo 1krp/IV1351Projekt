@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.kth.iv1351.bankjdbc.model.TeachingActivity;
-import se.kth.iv1351.bankjdbc.DTO.TeachingCostDTO;
-import se.kth.iv1351.bankjdbc.model.TADTO;
+import se.kth.iv1351.bankjdbc.model.DTO.TADTO;
+import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 
 /**
  * This data access object (DAO) encapsulates all database calls in the bank

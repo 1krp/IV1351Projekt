@@ -29,8 +29,9 @@ import java.util.ArrayList;
 import se.kth.iv1351.bankjdbc.controller.Controller;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
+import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 import se.kth.iv1351.bankjdbc.view.BlockingInterpreter;
-import se.kth.iv1351.bankjdbc.DTO.TeachingCostDTO;
+
 import java.sql.SQLException;
 
 /**
