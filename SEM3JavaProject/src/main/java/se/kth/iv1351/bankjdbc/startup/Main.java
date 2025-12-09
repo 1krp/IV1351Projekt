@@ -38,7 +38,7 @@ public class Main {
     public static void main(String[] args) {
         try {
         new BlockingInterpreter(new Controller()).handleCmds();
-        } catch(TeachingActivityDBException tadbe) {
+        } catch(TeachingActivityDBException bdbe) {
             System.out.println("Could not connect to Bank db.");
             tadbe.printStackTrace();
         }
