@@ -97,10 +97,10 @@ public class TeachingActivityDAO {
     public void updateNumStudendsInCourseInstance(int courseInstanceId, int numStudents) throws TeachingActivityDBException {
         String failureMsg = "Could not update num_students to: " + numStudents;
         try{
-            updateTeacherAllocationLimitStmt.setInt(1, numStudents);
-            updateTeacherAllocationLimitStmt.setInt(2, courseInstanceId);
+            updateNumStudendsInCIStmt.setInt(1, numStudents);
+            updateNumStudendsInCIStmt.setInt(2, courseInstanceId);
 
-            int updatedRows = updateTeacherAllocationLimitStmt.executeUpdate();
+            int updatedRows = updateNumStudendsInCIStmt.executeUpdate();
             if (updatedRows != 1) {
                 handleException(failureMsg, null);
             }
