@@ -40,7 +40,7 @@ public class Main {
         new BlockingInterpreter(new Controller()).handleCmds();
         } catch(TeachingActivityDBException bdbe) {
             System.out.println("Could not connect to Bank db.");
-            bdbe.printStackTrace();
+            tadbe.printStackTrace();
         }
     }
 }
