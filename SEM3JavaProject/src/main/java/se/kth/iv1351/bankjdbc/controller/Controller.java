@@ -52,22 +52,29 @@ public class Controller {
 
 
     public void updateTeacherAllocationLimit(int newLimit) throws RejectedException {
-        String failureMsg = "Could not update teacher allocation limit to: " + newLimit;
+        String failureMsg = "Could not update teacher allocation limit to: " + newLimit 
+                + ". Limit must be zero or higher.";
         
+        if (newLimit < 0) {
+            throw new RejectedException(failureMsg);
+        }
+
         try {
             TeachingActivityDb.updateTeacherAllocationLimit(newLimit);
+        } catch (TeachingActivityDBException tadbe) {
+            throw new RejectedException(failureMsg, tadbe);
         } catch (Exception e) {
             commitOngoingTransaction(failureMsg);
-            throw e;
+            throw new RejectedException(failureMsg, e);
         }
     } 
     
      
-    private void commitOngoingTransaction(String failureMsg) throws AccountException {
+    private void commitOngoingTransaction(String failureMsg) throws RejectedException {
         try {
             TeachingActivityDb.commit();
-        } catch (TeachingActivityDbException tadbe) {
-            throw new AccountException(failureMsg, tadbe);
+        } catch (TeachingActivityDBException tadbe) {
+            throw new RejectedException(failureMsg, tadbe);
         }
     }
     

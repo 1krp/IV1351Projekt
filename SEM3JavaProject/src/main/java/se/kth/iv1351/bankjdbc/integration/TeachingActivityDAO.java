@@ -105,7 +105,7 @@ public class TeachingActivityDAO {
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
         connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
-                "postgres", "cbmmlp");
+                "postgres", "asd123");
         connection.setAutoCommit(false);
     }
 
