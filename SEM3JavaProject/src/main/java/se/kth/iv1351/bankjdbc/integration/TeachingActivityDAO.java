@@ -55,16 +55,18 @@ public class TeachingActivityDAO {
     private static final String CI_PK_COLUMN_NAME = "id";
 
     private Connection connection;
+
+    private PreparedStatement computeTeachingCostStmt;
     private PreparedStatement updateTeacherAllocationLimitStmt;
     private PreparedStatement updateNumStudendsInCIStmt;
     private PreparedStatement createTAStmt;
     private PreparedStatement createTAFactorStmt;
     private PreparedStatement createTAPAconnectionStmt;
     private PreparedStatement findTAStmt;
-    private PreparedStatement computeTeachingCostStmt;
+    
 
     /**
-     * Constructs a new DAO object connected to the bank database.
+     * Constructs a new DAO object connected to the database.
      */
     public TeachingActivityDAO() throws TeachingActivityDBException {
         try {
@@ -74,6 +76,8 @@ public class TeachingActivityDAO {
             throw new TeachingActivityDBException("Could not connect to datasource.", exception);
         }
     }
+
+
 
     /**
      * Updates the max_courses limit in the employment_constants table
@@ -115,10 +119,6 @@ public class TeachingActivityDAO {
         }
     }
 
-
-
-
-
     /**
      * Commits the current transaction.
      * 
@@ -138,6 +138,11 @@ public class TeachingActivityDAO {
         connection.setAutoCommit(false);
     }
 
+    /**
+     * Prepared statements 
+     * 
+     * @throws SQLException If unable to excecute SQL-statement
+     */
     private void prepareStatements() throws SQLException {
         updateTeacherAllocationLimitStmt = connection.prepareStatement("UPDATE " + EC_C_TABLE_NAME 
                 + " SET " + EC_C_COLUMN_NAME + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
@@ -199,6 +204,13 @@ public class TeachingActivityDAO {
             );
     }
         
+    /**
+     * Task A1
+     * 
+     * @param cid course_instance_id
+     * @return TeachingCostDTO that contains wanted output row if execution is successful, else null
+     * @throws SQLException if query can not be executed
+     */
     public TeachingCostDTO calculateTeachingCosts(int cid) throws SQLException {
             
         TeachingCostDTO teachingCosts = null;
