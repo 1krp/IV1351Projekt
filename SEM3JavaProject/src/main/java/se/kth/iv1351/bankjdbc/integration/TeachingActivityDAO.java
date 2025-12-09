@@ -40,8 +40,13 @@ import java.util.List;
  * database.
  */
 public class TeachingActivityDAO {
+    private static final String EC_C_TABLE_NAME = "employment_constants";
+    private static final String EC_C_COLUMN_NAME = "max_courses";
+    private static final String EC_C_PK_COLUMN_NAME = "id";
+
     private Connection connection;
 
+    private PreparedStatement updateTeacherAllocationStmt;
 
     /**
      * Constructs a new DAO object connected to the bank database.
@@ -75,7 +80,9 @@ public class TeachingActivityDAO {
     }
 
     private void prepareStatements() throws SQLException {
-       
+        updateTeacherAllocationStmt = connection.prepareStatement(
+            "UPDATE " + EC_C_TABLE_NAME + " SET " + EC_C_COLUMN_NAME 
+            + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
     }
 
     private void handleException(String failureMsg, Exception cause) throws TeachingActivityDBException {
