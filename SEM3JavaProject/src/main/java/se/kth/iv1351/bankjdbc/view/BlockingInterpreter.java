@@ -92,7 +92,8 @@ public class BlockingInterpreter {
                             "\n");
                         break;
                     case MODIFY_COURSE_INSTANCE:
-                        /* TO DO */
+                        ctrl.modifyNumStudendsInCourseInstance( Integer.parseInt(cmdLine.getParameter(0)), 
+                                                                Integer.parseInt(cmdLine.getParameter(1)));
                         break;
                     case INSERT_PLANNED_ACTIVITY:
                         /* TO DO */

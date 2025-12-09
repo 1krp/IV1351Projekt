@@ -50,9 +50,13 @@ public class TeachingActivityDAO {
     private static final String EC_C_TABLE_NAME = "employment_constants";
     private static final String EC_C_COLUMN_NAME = "max_courses";
     private static final String EC_C_PK_COLUMN_NAME = "id";
+    private static final String CI_TABLE_NAME = "course_instance";
+    private static final String CI_COLUMN_NAME = "num_students";
+    private static final String CI_PK_COLUMN_NAME = "id";
 
     private Connection connection;
     private PreparedStatement updateTeacherAllocationLimitStmt;
+    private PreparedStatement updateNumStudendsInCIStmt;
     private PreparedStatement createTAStmt;
     private PreparedStatement createTAFactorStmt;
     private PreparedStatement createTAPAconnectionStmt;
@@ -94,6 +98,27 @@ public class TeachingActivityDAO {
         }
     }
 
+
+    public void updateNumStudendsInCourseInstance(int courseInstanceId, int numStudents) throws TeachingActivityDBException {
+        String failureMsg = "Could not update num_students to: " + numStudents;
+        try{
+            updateNumStudendsInCIStmt.setInt(1, numStudents);
+            updateNumStudendsInCIStmt.setInt(2, courseInstanceId);
+
+            int updatedRows = updateNumStudendsInCIStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+            connection.commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
+
+
+
+
+
     /**
      * Commits the current transaction.
      * 
@@ -128,6 +153,9 @@ public class TeachingActivityDAO {
         
         findTAStmt = connection.prepareStatement("SELECT " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME
                 + " FROM " + TEACHING_ACTIVITY_TABLE_NAME + " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " = ?"); //Om TA redan finns
+         
+        updateNumStudendsInCIStmt = connection.prepareStatement("UPDATE " + CI_TABLE_NAME 
+                + " SET " + CI_COLUMN_NAME + " = ? WHERE " + CI_PK_COLUMN_NAME + " = ?");
                 
         computeTeachingCostStmt = connection.prepareStatement(
                 "SELECT\n" + //

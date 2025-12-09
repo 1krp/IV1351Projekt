@@ -85,11 +85,31 @@ public class Controller {
         return courseTeachingCosts;
     }
 
-    private void commitOngoingTransaction(String failureMsg) throws TeachingActivityDBException {
+
+    public void modifyNumStudendsInCourseInstance(int courseInstanceId, int numStudents) throws RejectedException {
+        String failureMsg = "Could not update num_students to " + numStudents;
+        
+        if (courseInstanceId < 0 || numStudents < 0) {
+            throw new RejectedException(failureMsg);
+        }
+
+        try {
+            TeachingActivityDb.updateNumStudendsInCourseInstance(courseInstanceId, numStudents);
+        } catch (TeachingActivityDBException tadbe) {
+            throw new RejectedException(failureMsg, tadbe);
+        } catch (Exception e) {
+            commitOngoingTransaction(failureMsg);
+            throw new RejectedException(failureMsg, e);
+        }
+    } 
+    
+     
+    private void commitOngoingTransaction(String failureMsg) throws RejectedException {
         try {
             TeachingActivityDb.commit();
         } catch (TeachingActivityDBException tadbe) {
-            throw new TeachingActivityDBException(failureMsg, tadbe);
+            throw new RejectedException(failureMsg, tadbe);
         }
     }
+    
 }
