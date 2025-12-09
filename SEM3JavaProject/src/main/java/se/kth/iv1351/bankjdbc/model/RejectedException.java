@@ -21,33 +21,29 @@
  * THE SOFTWARE.
  */
 
-package se.kth.iv1351.bankjdbc.controller;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
-import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
-
-import se.kth.iv1351.bankjdbc.model.RejectedException;
+package se.kth.iv1351.bankjdbc.model;
 
 /**
- * This is the application's only controller, all calls to the model pass here.
- * The controller is also responsible for calling the DAO. Typically, the
- * controller first calls the DAO to retrieve data (if needed), then operates on
- * the data, and finally tells the DAO to store the updated data (if any).
+ * Thrown when deposit or withdrawal fails.
  */
-public class Controller {
-    private final TeachingActivityDAO TeachingActivityDb;
+public class RejectedException extends Exception {
 
     /**
-     * Creates a new instance, and retrieves a connection to the database.
-     * 
-     * @throws TeachingActivityDBException If unable to connect to the database.
+     * Create a new instance thrown because of the specified reason.
+     *
+     * @param reason Why the exception was thrown.
      */
-    public Controller() throws TeachingActivityDBException {
-        TeachingActivityDb = new TeachingActivityDAO();
+    public RejectedException(String reason) {
+        super(reason);
     }
 
-
+    /**
+     * Create a new instance thrown because of the specified reason and exception.
+     *
+     * @param reason    Why the exception was thrown.
+     * @param rootCause The exception that caused this exception to be thrown.
+     */
+    public RejectedException(String reason, Throwable rootCause) {
+        super(reason, rootCause);
+    }
 }
