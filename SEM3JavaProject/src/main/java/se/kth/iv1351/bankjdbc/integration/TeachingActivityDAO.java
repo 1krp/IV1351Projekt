@@ -68,6 +68,29 @@ public class TeachingActivityDAO {
     }
 
     /**
+     * Updates the max_courses limit in the employment_constants table
+     * 
+     * @param newLimit
+     * @throws TeachingActivityDBException
+     */
+
+    public void updateTeacherAllocationLimit(int newLimit) throws TeachingActivityDBException {
+        String failureMsg = "Could not update max_courses to: " + newLimit;
+        try{
+            updateTeacherAllocationLimitStmt.setInt(1, newLimit);
+            updateTeacherAllocationLimitStmt.setInt(2, 1);
+
+            int updatedRows = updateTeacherAllocationLimitStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+            connection.commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
+
+    /**
      * Commits the current transaction.
      * 
      * @throws TeachingActivityDBException If unable to commit the current transaction.
@@ -87,9 +110,14 @@ public class TeachingActivityDAO {
     }
 
     private void prepareStatements() throws SQLException {
-        updateTeacherAllocationLimitStmt = connection.prepareStatement("UPDATE " + EC_C_TABLE_NAME + " SET " + EC_C_COLUMN_NAME + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
-        createTAStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ") VALUES (?)");//Exercise
-        createTAFactorStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME + "(" + TEACHING_ACTIVITY_COLUMN_FACTOR + ") VALUES (?)");
+        updateTeacherAllocationLimitStmt = connection.prepareStatement("UPDATE " + EC_C_TABLE_NAME 
+                + " SET " + EC_C_COLUMN_NAME + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
+
+        createTAStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME 
+                + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ") VALUES (?)");//Exercise
+
+        createTAFactorStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME 
+                + "(" + TEACHING_ACTIVITY_COLUMN_FACTOR + ") VALUES (?)");
        
     }
 
