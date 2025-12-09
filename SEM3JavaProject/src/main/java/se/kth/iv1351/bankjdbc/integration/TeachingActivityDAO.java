@@ -46,7 +46,7 @@ public class TeachingActivityDAO {
 
     private Connection connection;
 
-    private PreparedStatement updateTeacherAllocationStmt;
+    private PreparedStatement updateTeacherAllocationLimitStmt;
 
     /**
      * Constructs a new DAO object connected to the bank database.
@@ -80,7 +80,7 @@ public class TeachingActivityDAO {
     }
 
     private void prepareStatements() throws SQLException {
-        updateTeacherAllocationStmt = connection.prepareStatement(
+        updateTeacherAllocationLimitStmt = connection.prepareStatement(
             "UPDATE " + EC_C_TABLE_NAME + " SET " + EC_C_COLUMN_NAME 
             + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
     }
