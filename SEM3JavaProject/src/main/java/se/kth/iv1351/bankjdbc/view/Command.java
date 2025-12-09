@@ -29,29 +29,29 @@ package se.kth.iv1351.bankjdbc.view;
  */
 public enum Command {
     /**
-     * Creates a new account.
+     * Compute the teaching cost (as planned and actually allocated) of a particular course instance given in the current year.
      */
-    NEW,
+    COST,
     /**
-     * Lists all existing accounts.
+     *  Modify the number of students in a given course instance.
      */
-    LIST,
+    MODIFY_COURSE_INSTANCE,
     /**
-     * Deletes the specified account.
+     * Allocate teaching activities for various course instances for teachers. (not more the max_courses).
      */
-    DELETE,
+    INSERT_PLANNED_ACTIVITY,
     /**
-     * Deposits the specified amount to the specified account
+     * Deallocate teaching activities for various course instances for teachers.
      */
-    DEPOSIT,
+    DELETE_PLANNED_ACTIVITY,
     /**
-     * Withdraws the specified amount from the specified account
+     * Update the num of courses a teacher can have per period.
      */
-    WITHDRAW,
+    UPDATE_MAX_TEACHER_ALLOCATION,
     /**
-     * Lists the balance of the specified account.
+     * Adds a new activity type for a specific course instance and teacher. Displays the change. 
      */
-    BALANCE,
+    ADD_NEW_TEACHING_ACTIVITY,
     /**
      * Lists all commands.
      */

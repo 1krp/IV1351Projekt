@@ -78,40 +78,23 @@ public class BlockingInterpreter {
                     case QUIT:
                         keepReceivingCmds = false;
                         break;
-                    case NEW:
-                        ctrl.createAccount(cmdLine.getParameter(0));
+                    case COST:
+                        /* TO DO */
                         break;
-                    case DELETE:
-                        ctrl.deleteAccount(cmdLine.getParameter(0));
+                    case MODIFY_COURSE_INSTANCE:
+                        /* TO DO */
                         break;
-                    case LIST:
-                        List<? extends AccountDTO> accounts = null;
-                        if (cmdLine.getParameter(0).equals("")) {
-                            accounts = ctrl.getAllAccounts();
-                        } else {
-                            accounts = ctrl.getAccountsForHolder(cmdLine.getParameter(0));
-                        }
-                        for (AccountDTO account : accounts) {
-                            System.out.println("acct no: " + account.getAccountNo() + ", "
-                                             + "holder: " + account.getHolderName() + ", "
-                                             + "balance: " + account.getBalance());
-                        }
+                    case INSERT_PLANNED_ACTIVITY:
+                        /* TO DO */
                         break;
-                    case DEPOSIT:
-                        ctrl.deposit(cmdLine.getParameter(0), 
-                                     Integer.parseInt(cmdLine.getParameter(1)));
+                    case DELETE_PLANNED_ACTIVITY:
+                        /* TO DO */
                         break;
-                    case WITHDRAW:
-                        ctrl.withdraw(cmdLine.getParameter(0), 
-                                      Integer.parseInt(cmdLine.getParameter(1)));
+                    case UPDATE_MAX_TEACHER_ALLOCATION:
+                        /* TO DO */
                         break;
-                    case BALANCE:
-                        AccountDTO acct = ctrl.getAccount(cmdLine.getParameter(0));
-                        if (acct != null) {
-                            System.out.println(acct.getBalance());
-                        } else {
-                            System.out.println("No such account");
-                        }
+                    case ADD_NEW_TEACHING_ACTIVITY:
+                        /* TO DO */
                         break;
                     default:
                         System.out.println("illegal command");
