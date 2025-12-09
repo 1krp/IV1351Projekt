@@ -134,7 +134,7 @@ public class TeachingActivityDAO {
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
         connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
-                "postgres", "asd123");
+                "postgres", "cbmmlp");
         connection.setAutoCommit(false);
     }
 
@@ -162,8 +162,16 @@ public class TeachingActivityDAO {
                 "    cl.course_code,\n" + //
                 "    ci.id AS course_instance,\n" + //
                 "    sp.period_name AS study_period,\n" + //
-                "    SUM(eJs.avgS * pa.planned_hours) AS planned_cost,\n" + //
-                "    SUM(eJs.avgS * pa.allocated_hours) AS actual_cost \n" + //
+                "    SUM(\n" + //
+                "        eJs.avgS * pa.planned_hours + \n" + //
+                "        eJs.avgS * aaeh.admin_hours_per_employee +\n" + //
+                "        eJs.avgS * aaeh.exam_hours_per_employee\n" + //
+                "        ) planned_cost,\n" + //
+                "    SUM(\n" + //
+                "        eJS.avgS * pa.allocated_hours + \n" + //
+                "        eJs.avgS * aaeh.admin_hours_per_employee +\n" + //
+                "        eJs.avgS * aaeh.exam_hours_per_employee\n" + //
+                "        ) actual_cost \n" + //
                 "FROM\n" + //
                 "    planned_activity pa \n" + //
                 "    JOIN course_instance ci ON pa.course_instance_id = ci.id AND ci.study_year = '2025'\n" + //
@@ -171,6 +179,7 @@ public class TeachingActivityDAO {
                 "    JOIN course_layout cl ON cv.course_layout_id = cl.id\n" + //
                 "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\n" + //
                 "    JOIN study_period sp ON cisp.study_period_id = sp.id\n" + //
+                "    JOIN admin_and_exam_hours_per_employee_and_course aaeh ON ci.id = aaeh.ciid\n" + //
                 "    JOIN (\n" + //
                 "        SELECT\n" + //
                 "            e.id,\n" + //

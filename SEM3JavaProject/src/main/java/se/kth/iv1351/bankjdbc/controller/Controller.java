@@ -63,7 +63,6 @@ public class Controller {
         } catch (TeachingActivityDBException tadbe) {
             throw new RejectedException(failureMsg, tadbe);
         } catch (Exception e) {
-            commitOngoingTransaction(failureMsg);
             throw new RejectedException(failureMsg, e);
         }
     }
