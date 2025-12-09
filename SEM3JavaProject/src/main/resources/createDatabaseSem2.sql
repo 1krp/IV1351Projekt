@@ -1,7 +1,3 @@
-\c postgres
-DROP DATABASE iv_db;
-CREATE DATABASE iv_db;
-\c iv_db;
 
 CREATE TABLE activity_constants (
  id SERIAL PRIMARY KEY,
