@@ -45,8 +45,16 @@ public class TeachingActivityDAO {
     private static final String EC_C_PK_COLUMN_NAME = "id";
 
     private Connection connection;
+    private static final String TEACHING_ACTIVITY_TABLE_NAME = "teaching_activity";
+    private static final String TEACHING_ACTIVITY_PK_COLUMN_NAME = "id";
+    private static final String TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME = "activity_name";
+    private static final String TEACHING_ACTIVITY_COLUMN_FACTOR = "factor";
 
     private PreparedStatement updateTeacherAllocationLimitStmt;
+
+    private Connection connection;
+    private PreparedStatement createTAStmt;
+    private PreparedStatement createTAFactorStmt;
 
     /**
      * Constructs a new DAO object connected to the bank database.
@@ -83,6 +91,9 @@ public class TeachingActivityDAO {
         updateTeacherAllocationLimitStmt = connection.prepareStatement(
             "UPDATE " + EC_C_TABLE_NAME + " SET " + EC_C_COLUMN_NAME 
             + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
+       createTAStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ") VALUES (?)");//Exercise
+       createTAFactorStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ") VALUES (?)");
+       
     }
 
     private void handleException(String failureMsg, Exception cause) throws TeachingActivityDBException {
