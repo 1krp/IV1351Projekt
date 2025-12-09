@@ -40,8 +40,15 @@ import java.util.List;
  * database.
  */
 public class TeachingActivityDAO {
-    private Connection connection;
+    private static final String TEACHING_ACTIVITY_TABLE_NAME = "teaching_activity";
+    private static final String TEACHING_ACTIVITY_PK_COLUMN_NAME = "id";
+    private static final String TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME = "activity_name";
+    private static final String TEACHING_ACTIVITY_COLUMN_FACTOR = "factor";
 
+
+    private Connection connection;
+    private PreparedStatement createTAStmt;
+    private PreparedStatement createTAFactorStmt;
 
     /**
      * Constructs a new DAO object connected to the bank database.
@@ -75,6 +82,8 @@ public class TeachingActivityDAO {
     }
 
     private void prepareStatements() throws SQLException {
+       createTAStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ") VALUES (?)");//Exercise
+       createTAFactorStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ") VALUES (?)");
        
     }
 
