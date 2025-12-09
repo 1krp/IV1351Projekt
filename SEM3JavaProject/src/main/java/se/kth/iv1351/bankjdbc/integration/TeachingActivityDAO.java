@@ -174,7 +174,7 @@ public class TeachingActivityDAO {
                 "        ) actual_cost \n" + //
                 "FROM\n" + //
                 "    planned_activity pa \n" + //
-                "    JOIN course_instance ci ON pa.course_instance_id = ci.id AND ci.study_year = '2025'\n" + //
+                "    JOIN course_instance ci ON pa.course_instance_id = ci.id AND ci.id = ? AND ci.study_year = '2025'\n" + //
                 "    JOIN course_version cv ON ci.course_version_id = cv.id\n" + //
                 "    JOIN course_layout cl ON cv.course_layout_id = cl.id\n" + //
                 "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\n" + //
@@ -199,29 +199,28 @@ public class TeachingActivityDAO {
             );
     }
         
-    public ArrayList<TeachingCostDTO> calculateTeachingCosts() throws SQLException {
+    public TeachingCostDTO calculateTeachingCosts(int cid) throws SQLException {
             
-        ArrayList<TeachingCostDTO> calculatedTeachingCosts = new ArrayList<>();
+        TeachingCostDTO teachingCosts = null;
         
         try {
+            computeTeachingCostStmt.setInt(1, cid);
             ResultSet rs = computeTeachingCostStmt.executeQuery();
         
             while (rs.next()){
-                TeachingCostDTO cost = new TeachingCostDTO(
+                teachingCosts = new TeachingCostDTO(
                     rs.getString("course_code"), 
                     rs.getInt("course_instance"), 
                     rs.getString("study_period"),
                     rs.getDouble("planned_cost"),
                     rs.getDouble("actual_cost")
                 );
-        
-                calculatedTeachingCosts.add(cost);
             }
                     
         } catch (SQLException se){
             System.out.println(se);
         }
-        return calculatedTeachingCosts;
+        return teachingCosts;
     }
 
     public void createTeachingActivity(TADTO TA) throws TeachingActivityDBException {

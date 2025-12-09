@@ -71,13 +71,7 @@ public class Controller {
 
         TeachingCostDTO courseTeachingCosts = null;
         try {
-            ArrayList<TeachingCostDTO> teachingCostsPlannedCourses = TeachingActivityDb.calculateTeachingCosts();
-
-            for (TeachingCostDTO dto : teachingCostsPlannedCourses) {
-                if (dto.getCourseInstance() == cid) {
-                    courseTeachingCosts = dto;
-                }
-            }
+            courseTeachingCosts = TeachingActivityDb.calculateTeachingCosts(cid);
         } catch (SQLException se) {
             System.out.println(se);
         }
