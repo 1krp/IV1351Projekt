@@ -49,9 +49,12 @@ public class TeachingActivityDAO {
     private static final String TEACHING_ACTIVITY_PK_COLUMN_NAME = "id";
     private static final String TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME = "activity_name";
     private static final String TEACHING_ACTIVITY_COLUMN_FACTOR = "factor";
+    private static final String CI_TABLE_NAME = "course_instance";
+    private static final String CI_COLUMN_NAME = "num_students";
+    private static final String CI_PK_COLUMN_NAME = "id";
 
     private PreparedStatement updateTeacherAllocationLimitStmt;
-
+    private PreparedStatement updateNumStudendsInCIStmt;
     private PreparedStatement createTAStmt;
     private PreparedStatement createTAFactorStmt;
 
@@ -90,6 +93,27 @@ public class TeachingActivityDAO {
         }
     }
 
+
+    public void updateNumStudendsInCourseInstance(int courseInstanceId, int numStudents) throws TeachingActivityDBException {
+        String failureMsg = "Could not update num_students to: " + numStudents;
+        try{
+            updateTeacherAllocationLimitStmt.setInt(1, numStudents);
+            updateTeacherAllocationLimitStmt.setInt(2, courseInstanceId);
+
+            int updatedRows = updateTeacherAllocationLimitStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+            connection.commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
+
+
+
+
+
     /**
      * Commits the current transaction.
      * 
@@ -118,6 +142,11 @@ public class TeachingActivityDAO {
 
         createTAFactorStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME 
                 + "(" + TEACHING_ACTIVITY_COLUMN_FACTOR + ") VALUES (?)");
+
+        updateNumStudendsInCIStmt = connection.prepareStatement("UPDATE " + CI_TABLE_NAME 
+                + " SET " + CI_COLUMN_NAME + " = ? WHERE " + CI_PK_COLUMN_NAME + " = ?");
+
+        
        
     }
 
