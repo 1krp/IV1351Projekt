@@ -31,8 +31,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-//import se.kth.iv1351.bankjdbc.model.Account;
-//import se.kth.iv1351.bankjdbc.model.AccountDTO;
+import se.kth.iv1351.bankjdbc.model.TeachingActivity;
+import se.kth.iv1351.bankjdbc.model.TADTO;
 
 /**
  * This data access object (DAO) encapsulates all database calls in the bank
@@ -129,11 +129,11 @@ public class TeachingActivityDAO {
         findTAStmt = connection.prepareStatement("SELECT " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME
                 + " FROM " + TEACHING_ACTIVITY_TABLE_NAME + " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " = ?"); //Om TA redan finns
     }
-    public void createAccount(TADTO TA) throws TeachingActivityDBException {
-        String failureMsg = "Could not create teaching activity: " + TA.name;
+    public void createTeachingActivity(TADTO TA) throws TeachingActivityDBException {
+        String failureMsg = "Could not create teaching activity: " + TA.getTAName();
         int updatedRows = 0;
         try {
-            int holderPK = findTAByName(TA.getHolderName());
+            int holderPK = findTAByName(TA.getTAName());
             if (holderPK == 0) {
                 createTAStmt.setString(1, TA.getHolderName());
                 updatedRows = createHolderStmt.executeUpdate();
@@ -142,9 +142,23 @@ public class TeachingActivityDAO {
                 }
                 holderPK = findHolderPKByName(TA.getHolderName());
             }
+
+            createAccountStmt.setInt(1, createAccountNo());
+            createAccountStmt.setInt(2, account.getBalance());
+            createAccountStmt.setInt(3, holderPK);
+            updatedRows = createAccountStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+
+            connection.commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
     private int findTAByName(String activityName) throws SQLException {
         ResultSet result = null;
-        findTAStmt.setString(1, activityName);
+        findTAStmt.setString(1, activityName);//kan vara fel kolumn
         result = findTAStmt.executeQuery();
         if (result.next()) {
             return result.getInt(TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME);
