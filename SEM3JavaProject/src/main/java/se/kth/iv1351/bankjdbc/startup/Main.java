@@ -24,9 +24,14 @@
 
 package se.kth.iv1351.bankjdbc.startup;
 
+import java.util.ArrayList;
+
 import se.kth.iv1351.bankjdbc.controller.Controller;
+import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.view.BlockingInterpreter;
+import se.kth.iv1351.bankjdbc.DTO.TeachingCostDTO;
+import java.sql.SQLException;
 
 /**
  * Starts the bank client.
@@ -36,6 +41,7 @@ public class Main {
      * @param args There are no command line arguments.
      */
     public static void main(String[] args) {
+        
         try {
         new BlockingInterpreter(new Controller()).handleCmds();
         } catch(TeachingActivityDBException tadbe) {

@@ -23,11 +23,11 @@
 
 package se.kth.iv1351.bankjdbc.controller;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.security.auth.login.AccountException;
-
+import se.kth.iv1351.bankjdbc.DTO.TeachingCostDTO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.model.RejectedException;
@@ -50,11 +50,10 @@ public class Controller {
         TeachingActivityDb = new TeachingActivityDAO();
     }
 
-
     public void updateTeacherAllocationLimit(int newLimit) throws RejectedException {
         String failureMsg = "Could not update teacher allocation limit to: " + newLimit 
                 + ". Limit must be zero or higher.";
-        
+
         if (newLimit < 0) {
             throw new RejectedException(failureMsg);
         }
@@ -67,15 +66,30 @@ public class Controller {
             commitOngoingTransaction(failureMsg);
             throw new RejectedException(failureMsg, e);
         }
-    } 
-    
-     
-    private void commitOngoingTransaction(String failureMsg) throws RejectedException {
+    }
+
+    public TeachingCostDTO fetchTeachingCostsForCourses(int cid){
+
+        TeachingCostDTO courseTeachingCosts = null;
+        try {
+            ArrayList<TeachingCostDTO> teachingCostsPlannedCourses = TeachingActivityDb.calculateTeachingCosts();
+
+            for (TeachingCostDTO dto : teachingCostsPlannedCourses) {
+                if (dto.getCourseInstance() == cid) {
+                    courseTeachingCosts = dto;
+                }
+            }
+        } catch (SQLException se) {
+            System.out.println(se);
+        }
+        return courseTeachingCosts;
+    }
+
+    private void commitOngoingTransaction(String failureMsg) throws TeachingActivityDBException {
         try {
             TeachingActivityDb.commit();
         } catch (TeachingActivityDBException tadbe) {
-            throw new RejectedException(failureMsg, tadbe);
+            throw new TeachingActivityDBException(failureMsg, tadbe);
         }
     }
-    
 }

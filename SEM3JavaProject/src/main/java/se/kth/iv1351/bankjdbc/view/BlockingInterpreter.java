@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import se.kth.iv1351.bankjdbc.controller.Controller;
-//import se.kth.iv1351.bankjdbc.model.AccountDTO;
+import se.kth.iv1351.bankjdbc.DTO.TeachingCostDTO;
 
 /**
  * Reads and interprets user commands. This command interpreter is blocking, the user
@@ -79,7 +79,17 @@ public class BlockingInterpreter {
                         keepReceivingCmds = false;
                         break;
                     case COST:
-                        /* TO DO */
+                        TeachingCostDTO costDTO = ctrl.fetchTeachingCostsForCourses(
+                            Integer.parseInt(cmdLine.getParameter(0)));
+
+                        System.out.println(
+                            "\n" +
+                            "Course Code: " + costDTO.getCourseCode() + "\n" +
+                            "Instance ID: " + costDTO.getCourseInstance() + "\n" +
+                            "Study Period: " +costDTO.getStudyPeriod() + "\n" +
+                            "Planned cost: " + costDTO.getPlannedCost() + "\n" +
+                            "Actual cost: " + costDTO.getActualCost() + "\n" +
+                            "\n");
                         break;
                     case MODIFY_COURSE_INSTANCE:
                         /* TO DO */
