@@ -49,11 +49,15 @@ public class TeachingActivityDAO {
     private static final String TEACHING_ACTIVITY_PK_COLUMN_NAME = "id";
     private static final String TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME = "activity_name";
     private static final String TEACHING_ACTIVITY_COLUMN_FACTOR = "factor";
+    private static final String PLANNED_ACTIVITY_TABLE_NAME = "planned_activity";
+    private static final String PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID = "activity_id";
 
     private PreparedStatement updateTeacherAllocationLimitStmt;
 
     private PreparedStatement createTAStmt;
     private PreparedStatement createTAFactorStmt;
+    private PreparedStatement createTAPAconnectionStmt;
+    private PreparedStatement findTAStmt;
 
     /**
      * Constructs a new DAO object connected to the bank database.
@@ -87,10 +91,38 @@ public class TeachingActivityDAO {
     }
 
     private void prepareStatements() throws SQLException {
-        updateTeacherAllocationLimitStmt = connection.prepareStatement("UPDATE " + EC_C_TABLE_NAME + " SET " + EC_C_COLUMN_NAME + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
-        createTAStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ") VALUES (?)");//Exercise
-        createTAFactorStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME + "(" + TEACHING_ACTIVITY_COLUMN_FACTOR + ") VALUES (?)");
-       
+        updateTeacherAllocationLimitStmt = connection.prepareStatement("UPDATE " + EC_C_TABLE_NAME + " SET "
+         + EC_C_COLUMN_NAME + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
+        createTAStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME + 
+        "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ") VALUES (?)");//Exercise
+        createTAFactorStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME + 
+        "(" + TEACHING_ACTIVITY_COLUMN_FACTOR + ") VALUES (?)");//1.5
+        createTAPAconnectionStmt = connection.prepareStatement("INSERT INTO " + PLANNED_ACTIVITY_TABLE_NAME + 
+        "(" + PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID + ") VALUES ("+ TEACHING_ACTIVITY_PK_COLUMN_NAME +")");
+        findTAStmt = connection.prepareStatement("SELECT " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME
+                + " FROM " + TEACHING_ACTIVITY_TABLE_NAME + " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " = ?"); //Om TA redan finns
+    }
+    public void createAccount(TADTO TA) throws TeachingActivityDBException {
+        String failureMsg = "Could not create teaching activity: " + TA.name;
+        int updatedRows = 0;
+        try {
+            int holderPK = findTAByName(TA.getHolderName());
+            if (holderPK == 0) {
+                createTAStmt.setString(1, TA.getHolderName());
+                updatedRows = createHolderStmt.executeUpdate();
+                if (updatedRows != 1) {
+                    handleException(failureMsg, null);
+                }
+                holderPK = findHolderPKByName(TA.getHolderName());
+            }
+    private int findTAByName(String activityName) throws SQLException {
+        ResultSet result = null;
+        findTAStmt.setString(1, activityName);
+        result = findTAStmt.executeQuery();
+        if (result.next()) {
+            return result.getInt(TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME);
+        }
+        return 0;
     }
 
     private void handleException(String failureMsg, Exception cause) throws TeachingActivityDBException {
