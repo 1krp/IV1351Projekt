@@ -31,36 +31,36 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import se.kth.iv1351.bankjdbc.model.Account;
-import se.kth.iv1351.bankjdbc.model.AccountDTO;
+//import se.kth.iv1351.bankjdbc.model.Account;
+//import se.kth.iv1351.bankjdbc.model.AccountDTO;
 
 /**
  * This data access object (DAO) encapsulates all database calls in the bank
  * application. No code outside this class shall have any knowledge about the
  * database.
  */
-public class BankDAO {
+public class TeachingActivityDAO {
     private Connection connection;
 
 
     /**
      * Constructs a new DAO object connected to the bank database.
      */
-    public BankDAO() throws BankDBException {
+    public TeachingActivityDAO() throws TeachingActivityDBException {
         try {
-            connectToBankDB();
+            connectToDB();
             prepareStatements();
         } catch (ClassNotFoundException | SQLException exception) {
-            throw new BankDBException("Could not connect to datasource.", exception);
+            throw new TeachingActivityDBException("Could not connect to datasource.", exception);
         }
     }
 
     /**
      * Commits the current transaction.
      * 
-     * @throws BankDBException If unable to commit the current transaction.
+     * @throws TeachingActivityDBException If unable to commit the current transaction.
      */
-    public void commit() throws BankDBException {
+    public void commit() throws TeachingActivityDBException {
         try {
             connection.commit();
         } catch (SQLException e) {
@@ -68,7 +68,7 @@ public class BankDAO {
         }
     }
 
-    private void connectToBankDB() throws ClassNotFoundException, SQLException {
+    private void connectToDB() throws ClassNotFoundException, SQLException {
         connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
                 "postgres", "asd123");
         // connection =
@@ -81,7 +81,7 @@ public class BankDAO {
        
     }
 
-    private void handleException(String failureMsg, Exception cause) throws BankDBException {
+    private void handleException(String failureMsg, Exception cause) throws TeachingActivityDBException {
         String completeFailureMsg = failureMsg;
         try {
             connection.rollback();
@@ -91,17 +91,17 @@ public class BankDAO {
         }
 
         if (cause != null) {
-            throw new BankDBException(failureMsg, cause);
+            throw new TeachingActivityDBException(failureMsg, cause);
         } else {
-            throw new BankDBException(failureMsg);
+            throw new TeachingActivityDBException(failureMsg);
         }
     }
 
-    private void closeResultSet(String failureMsg, ResultSet result) throws BankDBException {
+    private void closeResultSet(String failureMsg, ResultSet result) throws TeachingActivityDBException {
         try {
             result.close();
         } catch (Exception e) {
-            throw new BankDBException(failureMsg + " Could not close result set.", e);
+            throw new TeachingActivityDBException(failureMsg + " Could not close result set.", e);
         }
     }
 
