@@ -131,39 +131,30 @@ public class TeachingActivityDAO {
     }
     public void createTeachingActivity(TADTO TA) throws TeachingActivityDBException {
         String failureMsg = "Could not create teaching activity: " + TA.getTAName();
-        int updatedRows = 0;
+        boolean updatedRows = false;
         try {
-            int holderPK = findTAByName(TA.getTAName());
-            if (holderPK == 0) {
-                createTAStmt.setString(1, TA.getHolderName());
-                updatedRows = createHolderStmt.executeUpdate();
-                if (updatedRows != 1) {
+            String activityName = findTAByName(TA.getTAName());
+            if (activityName == null) {
+                createTAStmt.setString(1, TA.getTAName());
+                createTAFactorStmt.setDouble(2, TA.getFactor());
+                updatedRows = createTAStmt.executeUpdate()==1 && createTAFactorStmt.executeUpdate()==1;
+                if (updatedRows==false) {
                     handleException(failureMsg, null);
                 }
-                holderPK = findHolderPKByName(TA.getHolderName());
             }
-
-            createAccountStmt.setInt(1, createAccountNo());
-            createAccountStmt.setInt(2, account.getBalance());
-            createAccountStmt.setInt(3, holderPK);
-            updatedRows = createAccountStmt.executeUpdate();
-            if (updatedRows != 1) {
-                handleException(failureMsg, null);
-            }
-
-            connection.commit();
+        connection.commit();
         } catch (SQLException sqle) {
             handleException(failureMsg, sqle);
         }
     }
-    private int findTAByName(String activityName) throws SQLException {
+    private String findTAByName(String activityName) throws SQLException {
         ResultSet result = null;
         findTAStmt.setString(1, activityName);//kan vara fel kolumn
         result = findTAStmt.executeQuery();
         if (result.next()) {
-            return result.getInt(TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME);
+            return result.getString(TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME);
         }
-        return 0;
+        return null;
     }
 
     private void handleException(String failureMsg, Exception cause) throws TeachingActivityDBException {
