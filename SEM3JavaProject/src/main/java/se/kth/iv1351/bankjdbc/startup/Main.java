@@ -25,7 +25,7 @@
 package se.kth.iv1351.bankjdbc.startup;
 
 import se.kth.iv1351.bankjdbc.controller.Controller;
-import se.kth.iv1351.bankjdbc.integration.BankDBException;
+import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.view.BlockingInterpreter;
 
 /**
@@ -38,9 +38,9 @@ public class Main {
     public static void main(String[] args) {
         try {
         new BlockingInterpreter(new Controller()).handleCmds();
-        } catch(BankDBException bdbe) {
+        } catch(TeachingActivityDBException tadbe) {
             System.out.println("Could not connect to Bank db.");
-            bdbe.printStackTrace();
+            tadbe.printStackTrace();
         }
     }
 }
