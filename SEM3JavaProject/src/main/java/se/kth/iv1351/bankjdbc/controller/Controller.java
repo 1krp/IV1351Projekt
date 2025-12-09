@@ -26,6 +26,8 @@ package se.kth.iv1351.bankjdbc.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.security.auth.login.AccountException;
+
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.model.RejectedException;
@@ -48,14 +50,32 @@ public class Controller {
         TeachingActivityDb = new TeachingActivityDAO();
     }
 
-    
 
-    private void commitOngoingTransaction(String failureMsg) throws AccountException {
+    public void updateTeacherAllocationLimit(int newLimit) throws RejectedException {
+        String failureMsg = "Could not update teacher allocation limit to: " + newLimit 
+                + ". Limit must be zero or higher.";
+        
+        if (newLimit < 0) {
+            throw new RejectedException(failureMsg);
+        }
+
+        try {
+            TeachingActivityDb.updateTeacherAllocationLimit(newLimit);
+        } catch (TeachingActivityDBException tadbe) {
+            throw new RejectedException(failureMsg, tadbe);
+        } catch (Exception e) {
+            commitOngoingTransaction(failureMsg);
+            throw new RejectedException(failureMsg, e);
+        }
+    } 
+    
+     
+    private void commitOngoingTransaction(String failureMsg) throws RejectedException {
         try {
             TeachingActivityDb.commit();
-        } catch (TeachingActivityDbException tadbe) {
-            throw new AccountException(failureMsg, tadbe);
+        } catch (TeachingActivityDBException tadbe) {
+            throw new RejectedException(failureMsg, tadbe);
         }
     }
-
+    
 }

@@ -91,7 +91,7 @@ public class BlockingInterpreter {
                         /* TO DO */
                         break;
                     case UPDATE_MAX_TEACHER_ALLOCATION:
-                        /* TO DO */
+                        ctrl.updateTeacherAllocationLimit(Integer.parseInt(cmdLine.getParameter(0)));
                         break;
                     case ADD_NEW_TEACHING_ACTIVITY:
                         /* TO DO */
