@@ -30,6 +30,8 @@ import java.util.List;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.model.RejectedException;
+import se.kth.iv1351.bankjdbc.model.TeacherAllocationLimit;
+import se.kth.iv1351.bankjdbc.model.DTO.TeacherAllocationDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 
 /**
@@ -110,6 +112,23 @@ public class Controller {
         }
     }
     
+    public List<TeacherAllocationDTO> findTeacherAllocationsExceedingLimit(int year, int employeeId)
+            throws RejectedException {
+        String failureMsg = "Could not verify allocations for employee: " + employeeId;
+
+        if (year < 1 || employeeId < 1) {
+            throw new RejectedException(failureMsg);
+        }
+
+        try {
+            int maxCoursesPerPeriod = TeachingActivityDb.findMaxCoursesPerTeacher();
+            List<TeacherAllocationDTO> allocations = TeachingActivityDb.findTeacherAllocationPeriod(year, employeeId);
+
+            return TeacherAllocationLimit.exceedingAllocations(allocations, maxCoursesPerPeriod);
+        } catch (TeachingActivityDBException tadbe) {
+            throw new RejectedException(failureMsg, tadbe);
+        }
+    }
      
     private void commitOngoingTransaction(String failureMsg) throws RejectedException {
         try {

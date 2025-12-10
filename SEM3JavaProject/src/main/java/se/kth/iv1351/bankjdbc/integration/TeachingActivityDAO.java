@@ -169,22 +169,19 @@ public class TeachingActivityDAO {
         String failureMsg = "Could not search max courses per teacher";
         ResultSet result = null;
         try {
-        result = findMaxCoursesPerTeacherStmt.executeQuery();
-
-        if (!result.next()) {
-            handleException(failureMsg + ": no row found in employment_constants", null);
-        }
-
-        return result.getInt(EC_C_COLUMN_NAME);
-        } catch (SQLException sqle) {
-        handleException(failureMsg, sqle);
-        return 0;
-
-        } finally {
-            if (result != null) {
-                closeResultSet(failureMsg, result);
+            result = findMaxCoursesPerTeacherStmt.executeQuery();
+            if (result.next()) {
+                int maxCourses = result.getInt(EC_C_COLUMN_NAME);
+                connection.commit();
+                return maxCourses;
             }
+            handleException(failureMsg, null);
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        } finally {
+            closeResultSet(failureMsg, result);
         }
+        return 0;
     }
 
     /**
