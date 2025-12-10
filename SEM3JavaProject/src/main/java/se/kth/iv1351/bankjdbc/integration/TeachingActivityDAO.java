@@ -165,7 +165,7 @@ public class TeachingActivityDAO {
         computeTeachingCostStmt = connection.prepareStatement(
                 "SELECT\n" + //
                 "    cl.course_code,\n" + //
-                "    ci.id AS course_instance,\n" + //
+                "    ci." + CI_PK_COLUMN_NAME  + " AS course_instance,\n" + //
                 "    sp.period_name AS study_period,\n" + //
                 "    SUM(\n" + //
                 "        eJs.avgS * pa.planned_hours + \n" + //
@@ -178,13 +178,15 @@ public class TeachingActivityDAO {
                 "        eJs.avgS * aaeh.exam_hours_per_employee\n" + //
                 "        ) actual_cost \n" + //
                 "FROM\n" + //
-                "    planned_activity pa \n" + //
-                "    JOIN course_instance ci ON pa.course_instance_id = ci.id AND ci.id = ? AND ci.study_year = '2025'\n" + //
+                     PLANNED_ACTIVITY_TABLE_NAME + " pa \n" + //
+                "    JOIN " + CI_TABLE_NAME + " ci ON pa.course_instance_id = ci." + CI_PK_COLUMN_NAME 
+                        + " AND ci." + CI_PK_COLUMN_NAME + " = ? AND ci.study_year = '2025'\n" + //
                 "    JOIN course_version cv ON ci.course_version_id = cv.id\n" + //
                 "    JOIN course_layout cl ON cv.course_layout_id = cl.id\n" + //
                 "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\n" + //
                 "    JOIN study_period sp ON cisp.study_period_id = sp.id\n" + //
-                "    JOIN admin_and_exam_hours_per_employee_and_course aaeh ON ci.id = aaeh.ciid\n" + //
+                "    JOIN admin_and_exam_hours_per_employee_and_course aaeh ON ci." + CI_PK_COLUMN_NAME 
+                        + " = aaeh.ciid\n" + //
                 "    JOIN (\n" + //
                 "        SELECT\n" + //
                 "            e.id,\n" + //
@@ -198,7 +200,7 @@ public class TeachingActivityDAO {
                 "    ) eJs ON eJs.id = pa.employee_id \n" + //
                 "GROUP BY\n" + //
                 "    cl.course_code,\n" + //
-                "    ci.id,\n" + //
+                "    ci." + CI_PK_COLUMN_NAME  + ",\n" + //
                 "    sp.period_name \n" + //
                 "ORDER BY course_instance;"
             );

@@ -50,6 +50,17 @@ public class Controller {
         TeachingActivityDb = new TeachingActivityDAO();
     }
 
+    public TeachingCostDTO fetchTeachingCostsForCourse(int cid){
+
+        TeachingCostDTO courseTeachingCosts = null;
+        try {
+            courseTeachingCosts = TeachingActivityDb.calculateTeachingCosts(cid);
+        } catch (SQLException se) {
+            System.out.println(se);
+        }
+        return courseTeachingCosts;
+    }
+
     public void updateTeacherAllocationLimit(int newLimit) throws RejectedException {
         String failureMsg = "Could not update teacher allocation limit to: " + newLimit 
                 + ". Limit must be zero or higher.";
@@ -66,18 +77,6 @@ public class Controller {
             throw new RejectedException(failureMsg, e);
         }
     }
-
-    public TeachingCostDTO fetchTeachingCostsForCourses(int cid){
-
-        TeachingCostDTO courseTeachingCosts = null;
-        try {
-            courseTeachingCosts = TeachingActivityDb.calculateTeachingCosts(cid);
-        } catch (SQLException se) {
-            System.out.println(se);
-        }
-        return courseTeachingCosts;
-    }
-
 
     public void modifyNumStudendsInCourseInstance(int courseInstanceId, int numStudents) throws RejectedException {
         String failureMsg = "Could not update num_students to " + numStudents;
