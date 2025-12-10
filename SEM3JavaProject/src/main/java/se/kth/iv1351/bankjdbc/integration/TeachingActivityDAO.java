@@ -199,14 +199,16 @@ public class TeachingActivityDAO {
             "FROM planned_activity pa JOIN teaching_activity ta ON pa.activity_id = ta.id\n" + //
             "JOIN course_instance ci ON ci.id = pa.course_instance_id AND ci.id = ? \n" + //
             "JOIN course_version cv ON ci.course_version_id = cv.id\n" + //
-            "JOIN course_layout cl ON cv.course_layout_id = cl.id"
+            "JOIN course_layout cl ON cv.course_layout_id = cl.id\n" + //
+            "FOR UPDATE"
         );
 
         fetchAdminExamHoursForCourseStmt = connection.prepareStatement(
             "SELECT ci.id, aaeh.admin_hours_per_employee, aaeh.exam_hours_per_employee \n" + //
             "FROM course_instance ci JOIN admin_and_exam_hours_per_employee_and_course aaeh \n" + //
             "ON ci." + CI_PK_COLUMN_NAME + " = aaeh.ciid \n" + //
-            "WHERE ci." + CI_PK_COLUMN_NAME + " = ?"
+            "WHERE ci." + CI_PK_COLUMN_NAME + " = ? \n" + //
+            "FOR UPDATE"
         );
 
         fetchAvgSalaryEmployeeStmt = connection.prepareStatement(
@@ -235,7 +237,7 @@ public class TeachingActivityDAO {
      * @throws SQLException if query can not be executed
      */
 
-    public CourseInstanceDTO fetchCourseInstance(int cid, String year) throws SQLException {
+    public CourseInstanceDTO fetchCourseInstance(int cid, String year) throws TeachingActivityDBException {
             
         CourseInstanceDTO courseInst = null;
         
@@ -255,12 +257,13 @@ public class TeachingActivityDAO {
             }
                     
         } catch (SQLException se){
-            System.out.println("2pp" + se);
+            String erMsg = "Error when trying to fetch course instance.";
+            handleException(erMsg, se);
         }
         return courseInst;
     }
 
-    public ArrayList<PlannedActivityDTO> fetchPlannedActivities(int courseId) throws SQLException {
+    public ArrayList<PlannedActivityDTO> fetchPlannedActivities(int courseId) throws TeachingActivityDBException {
             
         ArrayList<PlannedActivityDTO> allPlannedActivities = new ArrayList<>();
         
@@ -283,12 +286,13 @@ public class TeachingActivityDAO {
             }
                     
         } catch (SQLException se){
-            System.out.println("3pp" + se);
+            String erMsg = "Error when trying to fetch planned activity.";
+            handleException(erMsg, se);
         }
         return allPlannedActivities;
     }
 
-    public AdminExamHoursDTO fetchAdminExamHoursForCourse(int cid) throws SQLException {
+    public AdminExamHoursDTO fetchAdminExamHoursForCourse(int cid) throws TeachingActivityDBException {
             
         AdminExamHoursDTO adminExamHours = null;
         
@@ -305,12 +309,13 @@ public class TeachingActivityDAO {
             }
                     
         } catch (SQLException se){
-            System.out.println("4pp" + se);
+            String erMsg = "Error when trying to fetch admin/exam hours.";
+            handleException(erMsg, se);
         }
         return adminExamHours;
     }
 
-    public AvgSalaryDTO fetchAvgSalaryEmployee(int eid) throws SQLException {
+    public AvgSalaryDTO fetchAvgSalaryEmployee(int eid) throws TeachingActivityDBException {
             
         AvgSalaryDTO avgSalary = null;
         
@@ -324,15 +329,19 @@ public class TeachingActivityDAO {
                     rs.getDouble("average_salary")
                 );
             }
-                    
+
+            commit();
+
         } catch (SQLException se){
-            System.out.println("5pp"+se);
+            String erMsg = "Error when trying to fetch avg employee salary";
+            handleException(erMsg, se);
         }
+        
         return avgSalary;
     }
 
     public ArrayList<TeachingCostDTO> showTeachingCostsForCourse(double plannedCost, double actCost, int courseId) 
-        throws SQLException {
+        throws TeachingActivityDBException {
             
         ArrayList<TeachingCostDTO> allTeachingCosts = new ArrayList<>();
         
@@ -355,7 +364,8 @@ public class TeachingActivityDAO {
             }
                     
         } catch (SQLException se){
-            System.out.println("7pp" + se);
+            String erMsg = "Error when trying to fetch rows for teaching costs.";
+            handleException(erMsg, se);
         }
         return allTeachingCosts;
     }

@@ -1,6 +1,7 @@
 package se.kth.iv1351.bankjdbc.model;
 
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
+import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.model.DTO.AvgSalaryDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.AdminExamHoursDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.CourseInstanceDTO;
@@ -35,13 +36,13 @@ public class TeachingCostCalculator {
                 plannedCost += (act.getPlannedHours() + adminExamHours.getAdminHours() + adminExamHours.getExamHours())
                     * empSalary;
                 
-                actualCost = (act.getAllocatedHours() + adminExamHours.getAdminHours() + adminExamHours.getExamHours())
+                actualCost += (act.getAllocatedHours() + adminExamHours.getAdminHours() + adminExamHours.getExamHours())
                     * empSalary;
             }
 
             return dao.showTeachingCostsForCourse(plannedCost, actualCost, courseInstance.getId());
-        } catch (SQLException se) {
-            System.out.println(se);
+        } catch (TeachingActivityDBException tae) {
+            System.out.println(tae.getMessage());
         }
         return null;
     }
