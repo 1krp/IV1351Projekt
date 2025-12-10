@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import se.kth.iv1351.bankjdbc.controller.Controller;
+import se.kth.iv1351.bankjdbc.model.DTO.PAjoinTADTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 
 /**
@@ -89,7 +90,7 @@ public class BlockingInterpreter {
                             System.out.println(
                                 "\n" +
                                 "Course Code: " + costDTO.getCourseCode() + "\n" +
-                                "Instance ID: " + costDTO.getCourseInstance() + "\n" +
+                                "Course Instance ID: " + costDTO.getCourseInstance() + "\n" +
                                 "Study Period: " +costDTO.getStudyPeriod() + "\n" +
                                 "Planned cost: " + costDTO.getPlannedCost() + "\n" +
                                 "Actual cost: " + costDTO.getActualCost() + "\n" +
@@ -118,8 +119,21 @@ public class BlockingInterpreter {
                                                                 Integer.parseInt(cmdLine.getParameter(4)),
                                                                 Integer.parseInt(cmdLine.getParameter(5)));
                         break;
+                    case REMOVE_ACTIVITY:
+                        ctrl.deleteTeacherActivity(cmdLine.getParameter(0));
+                        break;
                     case SHOW_TEACHING_ACTIVITY:
-                        ctrl.showTeachingActivity(cmdLine.getParameter(0));
+                        ArrayList<PAjoinTADTO> joinedDTOs = ctrl.showTeachingActivity(cmdLine.getParameter(0));
+                        
+                        for (PAjoinTADTO joinDTO : joinedDTOs) {
+                            System.out.println(
+                                "\n" +
+                                "Employee Id: " + joinDTO.getEmployeeId() + "\n" +
+                                "Course Instance ID: " + joinDTO.getCourseInstanceId() + "\n" +
+                                "Planned hours: " +joinDTO.getPlannedHours() + "\n" +
+                                "Allocated hours: " +joinDTO.getAllocatedHours() + "\n" +
+                                "Activity name: " + joinDTO.getActivityName());
+                        }
                         break;
                     default:
                         System.out.println("illegal command");

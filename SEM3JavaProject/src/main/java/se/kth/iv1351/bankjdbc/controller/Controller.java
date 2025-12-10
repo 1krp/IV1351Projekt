@@ -79,7 +79,8 @@ public class Controller {
     }
 
 
-    public void insertNewActivityWithAssociations(String activityName, double factor, int employee_id, int course_instance_id, int planned_hours, int allocated_hours) throws RejectedException{
+    public void insertNewActivityWithAssociations(String activityName, double factor, int employee_id, int course_instance_id, int planned_hours, int allocated_hours)
+     throws RejectedException{
         String failureMsg = "Could not insert "+ activityName +" into planned activity";
         try{
             TeachingActivityDb.createTAInPA(activityName, factor, employee_id, course_instance_id, planned_hours, allocated_hours);
@@ -91,7 +92,20 @@ public class Controller {
             throw new RejectedException(failureMsg, e);
         }
     }
-    
+
+    public void deleteTeacherActivity(String activityName) throws RejectedException{
+        String failureMsg = "Could not delete "+ activityName +" from teaching activity";
+        try{
+            TeachingActivityDb.removeActivity(activityName);
+        }
+        catch(TeachingActivityDBException tadbe){
+            throw new RejectedException(failureMsg, tadbe);
+        }catch (Exception e) {
+            commitOngoingTransaction(failureMsg);
+            throw new RejectedException(failureMsg, e);
+        }
+    }
+
     public ArrayList<PAjoinTADTO> showTeachingActivity(String activityName) throws TeachingActivityDBException{
         return TeachingActivityDb.showTAs(activityName);
     }

@@ -26,14 +26,14 @@ package se.kth.iv1351.bankjdbc.integration;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import se.kth.iv1351.bankjdbc.model.PlannedActivityDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.PAjoinTADTO;
-import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
+import se.kth.iv1351.bankjdbc.model.DTO.*;
+
 
 /**
  * This data access object (DAO) encapsulates all database calls in the bank
@@ -42,11 +42,10 @@ import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
  */
 public class TeachingActivityDAO {
     private static final String TEACHING_ACTIVITY_TABLE_NAME = "teaching_activity";
-    private static final String TEACHING_ACTIVITY_PK_COLUMN_NAME = "id";
+    private static final String TEACHING_ACTIVITY_TABLE_PK = "id";
     private static final String TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME = "activity_name";
     private static final String TEACHING_ACTIVITY_COLUMN_FACTOR = "factor";
 
-    private static final String PLANNED_ACTIVITY_PK_ID = "id";
     private static final String PLANNED_ACTIVITY_COLUMN_PLANNED_HOURS = "planned_hours";
     private static final String PLANNED_ACTIVITY_COLUMN_ALLOCATED_HOURS = "allocated_hours"; 
     private static final String PLANNED_ACTIVITY_TABLE_NAME = "planned_activity";
@@ -67,11 +66,19 @@ public class TeachingActivityDAO {
     private PreparedStatement updateTeacherAllocationLimitStmt;
     private PreparedStatement updateNumStudendsInCIStmt;
     private PreparedStatement createTAStmt;
+    private PreparedStatement showTARowsStmt;
     private PreparedStatement createTAFactorStmt;
     private PreparedStatement findTAStmt;
+    private PreparedStatement deletePlannedActivityStmt;
+    private PreparedStatement deleteActivityStmt;
     private PreparedStatement insertNewActivityStmt;
     private PreparedStatement displayTAStmt;
-    
+    private PreparedStatement fetchCourseInstanceStmt;
+    private PreparedStatement fetchPlannedActivityStmt;
+    private PreparedStatement fetchAdminExamHoursForCourseStmt;
+    private PreparedStatement fetchAvgSalaryEmployeeStmt;
+    private PreparedStatement showTeachingCostsStmt;
+        
 
     /**
      * Constructs a new DAO object connected to the database.
@@ -141,8 +148,8 @@ public class TeachingActivityDAO {
     }
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
-        connection = DriverManager.getConnection("",
-                "", "");
+        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres",
+                "Sparfbag", "Sagastass20!");
         connection.setAutoCommit(false);
     }
 
@@ -156,14 +163,16 @@ public class TeachingActivityDAO {
                 + " SET " + EC_C_COLUMN_NAME + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
 
         createTAStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME 
-                + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ") VALUES (?)");//Exercise
+                + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ", "+ TEACHING_ACTIVITY_COLUMN_FACTOR +") VALUES (?,?)");//Exercise
 
-        createTAFactorStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME 
-                + "(" + TEACHING_ACTIVITY_COLUMN_FACTOR + ") VALUES (?)");
-
-        
-        findTAStmt = connection.prepareStatement("SELECT " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME
+        findTAStmt = connection.prepareStatement("SELECT " + TEACHING_ACTIVITY_TABLE_PK
                 + " FROM " + TEACHING_ACTIVITY_TABLE_NAME + " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " = ?"); //Om TA redan finns
+        
+        deletePlannedActivityStmt = connection.prepareStatement("DELETE FROM " + PLANNED_ACTIVITY_TABLE_NAME + 
+        " WHERE " + PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID + " =?");
+
+        deleteActivityStmt = connection.prepareStatement("DELETE FROM " + TEACHING_ACTIVITY_TABLE_NAME + 
+        " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " =?");
 
         insertNewActivityStmt = connection.prepareStatement("INSERT INTO "+ PLANNED_ACTIVITY_TABLE_NAME +"(" 
         + PLANNED_ACTIVITY_COLUMN_EMPLOYEE_ID + ", " + PLANNED_ACTIVITY_COLUMN_COURSE_INSTANCE_ID + ", " +
@@ -177,48 +186,48 @@ public class TeachingActivityDAO {
                         "FROM planned_activity\r\n" + //
                         "INNER JOIN teaching_activity ON planned_activity.activity_id = teaching_activity.id WHERE teaching_activity.activity_name = ?");
 
-        computeTeachingCostStmt = connection.prepareStatement(
-                "SELECT\n" + //
-                "    cl.course_code,\n" + //
-                "    ci." + CI_PK_COLUMN_NAME  + " AS course_instance,\n" + //
-                "    sp.period_name AS study_period,\n" + //
-                "    SUM(\n" + //
-                "        eJs.avgS * pa.planned_hours + \n" + //
-                "        eJs.avgS * aaeh.admin_hours_per_employee +\n" + //
-                "        eJs.avgS * aaeh.exam_hours_per_employee\n" + //
-                "        ) planned_cost,\n" + //
-                "    SUM(\n" + //
-                "        eJS.avgS * pa.allocated_hours + \n" + //
-                "        eJs.avgS * aaeh.admin_hours_per_employee +\n" + //
-                "        eJs.avgS * aaeh.exam_hours_per_employee\n" + //
-                "        ) actual_cost \n" + //
-                "FROM\n" + //
-                     PLANNED_ACTIVITY_TABLE_NAME + " pa \n" + //
-                "    JOIN " + CI_TABLE_NAME + " ci ON pa.course_instance_id = ci." + CI_PK_COLUMN_NAME 
-                        + " AND ci." + CI_PK_COLUMN_NAME + " = ? AND ci.study_year = '2025'\n" + //
-                "    JOIN course_version cv ON ci.course_version_id = cv.id\n" + //
-                "    JOIN course_layout cl ON cv.course_layout_id = cl.id\n" + //
-                "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\n" + //
-                "    JOIN study_period sp ON cisp.study_period_id = sp.id\n" + //
-                "    JOIN admin_and_exam_hours_per_employee_and_course aaeh ON ci." + CI_PK_COLUMN_NAME 
-                        + " = aaeh.ciid\n" + //
-                "    JOIN (\n" + //
-                "        SELECT\n" + //
-                "            e.id,\n" + //
-                "            AVG(es.salary_per_hour) avgS\n" + //
-                "        FROM\n" + //
-                "            employee e \n" + //
-                "            JOIN employee_salary es ON e.id = es.employee_id\n" + //
-                "        GROUP BY\n" + //
-                "            es.employee_id,\n" + //
-                "            e.id\n" + //
-                "    ) eJs ON eJs.id = pa.employee_id \n" + //
-                "GROUP BY\n" + //
-                "    cl.course_code,\n" + //
-                "    ci." + CI_PK_COLUMN_NAME  + ",\n" + //
-                "    sp.period_name \n" + //
-                "ORDER BY course_instance;"
-            );
+        fetchCourseInstanceStmt = connection.prepareStatement(
+            "SELECT ci.id, ci.num_students, ci.study_year, cv.hp, cl.course_code \n" + //
+            "FROM course_instance ci \n" + //
+            "JOIN course_version cv ON ci.course_version_id = cv.id \n" + //
+            "JOIN course_layout cl ON cv.course_layout_id = cl.id \n" + //
+            "WHERE ci.id = ? AND ci.study_year = ?"
+        );
+
+        fetchPlannedActivityStmt = connection.prepareStatement(
+            "SELECT pa.*, ta.factor\n" + //
+            "FROM planned_activity pa JOIN teaching_activity ta ON pa.activity_id = ta.id\n" + //
+            "JOIN course_instance ci ON ci.id = pa.course_instance_id AND ci.id = ? \n" + //
+            "JOIN course_version cv ON ci.course_version_id = cv.id\n" + //
+            "JOIN course_layout cl ON cv.course_layout_id = cl.id\n" + //
+            "FOR UPDATE"
+        );
+
+        fetchAdminExamHoursForCourseStmt = connection.prepareStatement(
+            "SELECT ci.id, aaeh.admin_hours_per_employee, aaeh.exam_hours_per_employee \n" + //
+            "FROM course_instance ci JOIN admin_and_exam_hours_per_employee_and_course aaeh \n" + //
+            "ON ci." + CI_PK_COLUMN_NAME + " = aaeh.ciid \n" + //
+            "WHERE ci." + CI_PK_COLUMN_NAME + " = ? \n" + //
+            "FOR UPDATE"
+        );
+
+        fetchAvgSalaryEmployeeStmt = connection.prepareStatement(
+            "SELECT e.id, AVG(es.salary_per_hour) average_salary \n" + //
+            "FROM employee e JOIN employee_salary es ON e.id = es.employee_id \n" + //
+            "WHERE e.id = ? \n" + //
+            "FOR UPDATE \n" + //
+            "GROUP BY e.id");
+
+        showTeachingCostsStmt = connection.prepareStatement(
+            "SELECT cl.course_code, ci." + CI_PK_COLUMN_NAME  + " AS course_instance,\n" + 
+            "sp.period_name AS study_period, (?) AS planned_cost, (?) AS actual_cost \n" + //
+            "FROM course_instance ci JOIN course_version cv ON ci.course_version_id = cv.id \n" + //
+            "JOIN course_layout cl ON cv.course_layout_id = cl.id \n" + //
+            "JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\n" + //
+            "JOIN study_period sp ON cisp.study_period_id = sp.id \n" + //
+            "WHERE ci.id = ?"
+        );
+        showTARowsStmt = connection.prepareStatement("SELECT * FROM "+ TEACHING_ACTIVITY_TABLE_NAME);
     }
         
     /**
@@ -228,16 +237,122 @@ public class TeachingActivityDAO {
      * @return TeachingCostDTO that contains wanted output row if execution is successful, else null
      * @throws SQLException if query can not be executed
      */
-    public TeachingCostDTO calculateTeachingCosts(int cid) throws SQLException {
+
+    public CourseInstanceDTO fetchCourseInstance(int cid, String year) throws TeachingActivityDBException {
             
-        TeachingCostDTO teachingCosts = null;
+        CourseInstanceDTO courseInst = null;
         
         try {
             computeTeachingCostStmt.setInt(1, cid);
             ResultSet rs = computeTeachingCostStmt.executeQuery();
         
             while (rs.next()){
-                teachingCosts = new TeachingCostDTO(
+                courseInst = new CourseInstanceDTO(
+                    rs.getInt("id"),
+                    rs.getInt("num_students"),
+                    rs.getString("study_year"),
+                    rs.getDouble("hp"),
+                    rs.getString("course_code")
+                );
+            }
+                    
+        } catch (SQLException se){
+            String erMsg = "Error when trying to fetch course instance.";
+            handleException(erMsg, se);
+        }
+        return courseInst;
+    }
+
+    public ArrayList<PlannedActivityDTO> fetchPlannedActivities(int courseId) throws TeachingActivityDBException {
+            
+        ArrayList<PlannedActivityDTO> allPlannedActivities = new ArrayList<>();
+        
+        try {
+            fetchPlannedActivityStmt.setInt(1, courseId);
+            ResultSet rs = fetchPlannedActivityStmt.executeQuery();
+        
+            while (rs.next()){
+                PlannedActivityDTO plannedActivity = new PlannedActivityDTO(
+                    rs.getInt("id"),
+                    rs.getInt("employee_id"),
+                    rs.getInt("course_instance_id"),
+                    rs.getInt("planned_hours"),
+                    rs.getInt("allocated_hours"),
+                    rs.getInt("activity_id"),
+                    rs.getDouble("factor")
+                );
+
+                allPlannedActivities.add(plannedActivity);
+            }
+                    
+        } catch (SQLException se){
+            String erMsg = "Error when trying to fetch planned activity.";
+            handleException(erMsg, se);
+        }
+        return allPlannedActivities;
+    }
+
+    public AdminExamHoursDTO fetchAdminExamHoursForCourse(int cid) throws TeachingActivityDBException {
+            
+        AdminExamHoursDTO adminExamHours = null;
+        
+        try {
+            fetchAdminExamHoursForCourseStmt.setInt(1, cid);
+            ResultSet rs = fetchAdminExamHoursForCourseStmt.executeQuery();
+        
+            while (rs.next()){
+                adminExamHours = new AdminExamHoursDTO(
+                    rs.getInt("id"),
+                    rs.getInt("admin_hours_per_employee"),
+                    rs.getInt("exam_hours_per_employee")
+                );
+            }
+                    
+        } catch (SQLException se){
+            String erMsg = "Error when trying to fetch admin/exam hours.";
+            handleException(erMsg, se);
+        }
+        return adminExamHours;
+    }
+
+    public AvgSalaryDTO fetchAvgSalaryEmployee(int eid) throws TeachingActivityDBException {
+            
+        AvgSalaryDTO avgSalary = null;
+        
+        try {
+            fetchAvgSalaryEmployeeStmt.setInt(1, eid);
+            ResultSet rs = fetchAvgSalaryEmployeeStmt.executeQuery();
+        
+            while (rs.next()){
+                avgSalary = new AvgSalaryDTO(
+                    rs.getInt("id"),
+                    rs.getDouble("average_salary")
+                );
+            }
+
+            commit();
+
+        } catch (SQLException se){
+            String erMsg = "Error when trying to fetch avg employee salary";
+            handleException(erMsg, se);
+        }
+        
+        return avgSalary;
+    }
+
+    public ArrayList<TeachingCostDTO> showTeachingCostsForCourse(double plannedCost, double actCost, int courseId) 
+        throws TeachingActivityDBException {
+            
+        ArrayList<TeachingCostDTO> allTeachingCosts = new ArrayList<>();
+        
+        try {
+            showTeachingCostsStmt.setDouble(1, plannedCost);
+            showTeachingCostsStmt.setDouble(2, actCost);
+            showTeachingCostsStmt.setInt(3, courseId);
+            ResultSet rs = showTeachingCostsStmt.executeQuery();
+        
+            while (rs.next()){
+                TeachingCostDTO teachingCosts = new TeachingCostDTO(
                     rs.getString("course_code"), 
                     rs.getInt("course_instance"), 
                     rs.getString("study_period"),
@@ -247,16 +362,22 @@ public class TeachingActivityDAO {
             }
                     
         } catch (SQLException se){
-            System.out.println(se);
+            String erMsg = "Error when trying to fetch rows for teaching costs.";
+            handleException(erMsg, se);
         }
-        return teachingCosts;
+        return allTeachingCosts;
     }
 
 
     public void createTAInPA(String activityName, double factor, int employee_id, int course_instance_id, int planned_hours, int allocated_hours)
      throws TeachingActivityDBException {
         int activityId = createTeachingActivity(activityName,factor);
+        String failureMsgId = "Id cannot be zero: " + activityId;
         String failureMsg = "Could not create the planned activity with activity id: " + activityId;
+        String failureMsgSQL = "SQL error when adding: " + activityId;
+        if(activityId==0){
+            handleException(failureMsgId, null);
+        }
         int updatedRows = 0;
         try {
             insertNewActivityStmt.setInt(1, employee_id);
@@ -270,7 +391,7 @@ public class TeachingActivityDAO {
             }
         connection.commit();
         } catch (SQLException sqle) {
-            handleException(failureMsg, sqle);
+            handleException(failureMsgSQL, sqle);
         }    
     }
     public ArrayList<PAjoinTADTO> showTAs(String activityName) throws TeachingActivityDBException{
@@ -296,32 +417,60 @@ public class TeachingActivityDAO {
     }
 
     private int createTeachingActivity(String activityName, double factor) throws TeachingActivityDBException {
-        String failureMsg = "Could not create teaching activity: " + activityName;
-        boolean updatedRows = false;
+        String failureMsgUpdate = "Could not add teaching activity: " + activityName;
+        String failureMsgSQL = "SQL error for: " + activityName;
+        String failureMsgSQLKeys = "SQL error for generated keys: " + activityName;
+        String failureMsgDontAdd = activityName+" Already exists";
+        int updatedRows = 0;
         int activityId = 0;
+        
         try {
             activityId = findTAByName(activityName);
             if (activityId == 0) {
                 createTAStmt.setString(1, activityName);
-                createTAFactorStmt.setDouble(2, factor);
-                updatedRows = createTAStmt.executeUpdate()==1 && createTAFactorStmt.executeUpdate()==1;
-                if (updatedRows==false) {
-                    handleException(failureMsg, null);
+                createTAStmt.setDouble(2, factor);
+                updatedRows = createTAStmt.executeUpdate();
+                if (updatedRows != 1) {
+                    handleException(failureMsgUpdate, null);
                 }
-            }    
+            } 
         connection.commit();
         } catch (SQLException sqle) {
-            handleException(failureMsg, sqle);
+            handleException(failureMsgSQL, sqle);
         }
+        if (activityId == 0) {
+            try(ResultSet generatedKeys = createTAStmt.getGeneratedKeys()){
+                if(generatedKeys.next()){
+                    activityId = generatedKeys.getInt(1);
+                }
+            }catch (SQLException sqle) {
+                handleException(failureMsgSQLKeys, sqle);
+            }
+        }else{
+            handleException(failureMsgDontAdd, null);}
         return activityId;
     }
-
+    public void removeActivity(String activityName) throws TeachingActivityDBException {
+        String msg = "No deleted rows for: "+activityName;
+        String failureMsgSQL = "SQL error for: " + activityName;
+        try{
+        deleteActivityStmt.setString(1,activityName);
+        int updatedRows = deleteActivityStmt.executeUpdate();
+        if( updatedRows != 0){
+            handleException(msg, null);
+        }
+        connection.commit();
+        }catch(SQLException sql){
+            handleException(failureMsgSQL, sql);
+        }
+    }
     private int findTAByName(String activityName) throws SQLException {
+
         ResultSet result = null;
         findTAStmt.setString(1, activityName);
         result = findTAStmt.executeQuery();
         if (result.next()) {
-            return result.getInt("id");
+            return result.getInt(TEACHING_ACTIVITY_TABLE_PK);
         }
         return 0;
     }
