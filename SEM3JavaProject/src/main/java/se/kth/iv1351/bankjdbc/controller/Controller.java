@@ -30,6 +30,7 @@ import java.util.List;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.model.RejectedException;
+import se.kth.iv1351.bankjdbc.model.TeachingCostCalculator;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 
 /**
@@ -40,6 +41,7 @@ import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
  */
 public class Controller {
     private final TeachingActivityDAO TeachingActivityDb;
+    private final TeachingCostCalculator tcCalculator;
 
     /**
      * Creates a new instance, and retrieves a connection to the database.
@@ -48,16 +50,13 @@ public class Controller {
      */
     public Controller() throws TeachingActivityDBException {
         TeachingActivityDb = new TeachingActivityDAO();
+        tcCalculator = new TeachingCostCalculator(TeachingActivityDb);
     }
 
-    public TeachingCostDTO fetchTeachingCostsForCourse(int cid){
+    public ArrayList<TeachingCostDTO> fetchTeachingCostsForCourse(int cid, String year){
 
-        TeachingCostDTO courseTeachingCosts = null;
-        try {
-            courseTeachingCosts = TeachingActivityDb.calculateTeachingCosts(cid);
-        } catch (SQLException se) {
-            System.out.println(se);
-        }
+        ArrayList<TeachingCostDTO> courseTeachingCosts = new ArrayList<>();
+        courseTeachingCosts = tcCalculator.calculateTeachingCostsForCourse(cid, year);
         return courseTeachingCosts;
     }
 

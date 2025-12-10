@@ -25,6 +25,7 @@
 package se.kth.iv1351.bankjdbc.view;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import se.kth.iv1351.bankjdbc.controller.Controller;
@@ -79,17 +80,22 @@ public class BlockingInterpreter {
                         keepReceivingCmds = false;
                         break;
                     case COST:
-                        TeachingCostDTO costDTO = ctrl.fetchTeachingCostsForCourse(
-                            Integer.parseInt(cmdLine.getParameter(0)));
 
-                        System.out.println(
-                            "\n" +
-                            "Course Code: " + costDTO.getCourseCode() + "\n" +
-                            "Instance ID: " + costDTO.getCourseInstance() + "\n" +
-                            "Study Period: " +costDTO.getStudyPeriod() + "\n" +
-                            "Planned cost: " + costDTO.getPlannedCost() + "\n" +
-                            "Actual cost: " + costDTO.getActualCost() + "\n" +
-                            "\n");
+                        ArrayList<TeachingCostDTO> costDTOs = ctrl.fetchTeachingCostsForCourse(
+                            Integer.parseInt(cmdLine.getParameter(0)),
+                            cmdLine.getParameter(1));
+                        
+                        for (TeachingCostDTO costDTO : costDTOs) {
+                            System.out.println(
+                                "\n" +
+                                "Course Code: " + costDTO.getCourseCode() + "\n" +
+                                "Instance ID: " + costDTO.getCourseInstance() + "\n" +
+                                "Study Period: " +costDTO.getStudyPeriod() + "\n" +
+                                "Planned cost: " + costDTO.getPlannedCost() + "\n" +
+                                "Actual cost: " + costDTO.getActualCost() + "\n" +
+                                "\n");
+                        }
+                        
                         break;
                     case MODIFY_COURSE_INSTANCE:
                         ctrl.modifyNumStudendsInCourseInstance( Integer.parseInt(cmdLine.getParameter(0)), 
