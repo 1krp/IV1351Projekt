@@ -129,7 +129,11 @@ public class Controller {
             throw new RejectedException(failureMsg, tadbe);
         }
     }
-     
+    
+    public void allocatePlannedActivity(int employeeId, int courseInstanceId, int plannedHours, int activityID, int allocatedHours) throws RejectedException {
+        String failureMsg = "Could not allocate activity for employee: " + employeeId;
+    }
+
     private void commitOngoingTransaction(String failureMsg) throws RejectedException {
         try {
             TeachingActivityDb.commit();
