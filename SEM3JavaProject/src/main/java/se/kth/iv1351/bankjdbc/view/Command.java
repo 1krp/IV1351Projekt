@@ -39,11 +39,11 @@ public enum Command {
     /**
      * Allocate teaching activities for various course instances for teachers. (not more the max_courses).
      */
-    INSERT_PLANNED_ACTIVITY,
+    ALLOCATE_PLANNED_ACTIVITY,
     /**
      * Deallocate teaching activities for various course instances for teachers.
      */
-    DELETE_PLANNED_ACTIVITY,
+    DEALLOCATE_PLANNED_ACTIVITY,
     /**
      * Update the num of courses a teacher can have per period.
      */
