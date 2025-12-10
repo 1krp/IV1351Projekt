@@ -31,6 +31,7 @@ import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.model.RejectedException;
 import se.kth.iv1351.bankjdbc.model.TeachingCostCalculator;
+import se.kth.iv1351.bankjdbc.model.DTO.PAjoinTADTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 
 /**
@@ -90,16 +91,9 @@ public class Controller {
             throw new RejectedException(failureMsg, e);
         }
     }
-    public void showTeachingActivity(String activityName) throws RejectedException{
-        String failureMsg = "Could not show "+ activityName +" in planned activity";
-        try{
-            TeachingActivityDb.showTAs(activityName);
-        }catch(TeachingActivityDBException tadbe){
-            throw new RejectedException(failureMsg, tadbe);
-        }catch (Exception e) {
-            commitOngoingTransaction(failureMsg);
-            throw new RejectedException(failureMsg, e);
-        }
+    
+    public ArrayList<PAjoinTADTO> showTeachingActivity(String activityName) throws TeachingActivityDBException{
+        return TeachingActivityDb.showTAs(activityName);
     }
     public void modifyNumStudendsInCourseInstance(int courseInstanceId, int numStudents) throws RejectedException {
         String failureMsg = "Could not update num_students to " + numStudents;

@@ -29,16 +29,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
-import se.kth.iv1351.bankjdbc.model.TeachingActivity;
-
-import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.TADTO;
+import se.kth.iv1351.bankjdbc.model.PlannedActivityDTO;
+import se.kth.iv1351.bankjdbc.model.DTO.PAjoinTADTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.AdminExamHoursDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.AvgSalaryDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.CourseInstanceDTO;
 
 /**
  * This data access object (DAO) encapsulates all database calls in the bank
@@ -68,11 +63,7 @@ public class TeachingActivityDAO {
 
     private Connection connection;
 
-    private PreparedStatement fetchCourseInstanceStmt;
-    private PreparedStatement fetchPlannedActivityStmt;
-    private PreparedStatement fetchAdminExamHoursForCourseStmt;
-    private PreparedStatement fetchAvgSalaryEmployeeStmt;
-    private PreparedStatement showTeachingCostsStmt;
+    private PreparedStatement computeTeachingCostStmt;
     private PreparedStatement updateTeacherAllocationLimitStmt;
     private PreparedStatement updateNumStudendsInCIStmt;
     private PreparedStatement createTAStmt;
@@ -186,46 +177,50 @@ public class TeachingActivityDAO {
                         "FROM planned_activity\r\n" + //
                         "INNER JOIN teaching_activity ON planned_activity.activity_id = teaching_activity.id WHERE teaching_activity.activity_name = ?");
 
-        fetchCourseInstanceStmt = connection.prepareStatement(
-            "SELECT ci.id, ci.num_students, ci.study_year, cv.hp, cl.course_code \n" + //
-            "FROM course_instance ci \n" + //
-            "JOIN course_version cv ON ci.course_version_id = cv.id \n" + //
-            "JOIN course_layout cl ON cv.course_layout_id = cl.id \n" + //
-            "WHERE ci.id = ? AND ci.study_year = ?"
-        );
-
-        fetchPlannedActivityStmt = connection.prepareStatement(
-            "SELECT pa.*, ta.factor\n" + //
-            "FROM planned_activity pa JOIN teaching_activity ta ON pa.activity_id = ta.id\n" + //
-            "JOIN course_instance ci ON ci.id = pa.course_instance_id AND ci.id = ? \n" + //
-            "JOIN course_version cv ON ci.course_version_id = cv.id\n" + //
-            "JOIN course_layout cl ON cv.course_layout_id = cl.id"
-        );
-
-        fetchAdminExamHoursForCourseStmt = connection.prepareStatement(
-            "SELECT ci.id, aaeh.admin_hours_per_employee, aaeh.exam_hours_per_employee \n" + //
-            "FROM course_instance ci JOIN admin_and_exam_hours_per_employee_and_course aaeh \n" + //
-            "ON ci." + CI_PK_COLUMN_NAME + " = aaeh.ciid \n" + //
-            "WHERE ci." + CI_PK_COLUMN_NAME + " = ?"
-        );
-
-        fetchAvgSalaryEmployeeStmt = connection.prepareStatement(
-            "SELECT e.id, AVG(es.salary_per_hour) average_salary \n" + //
-            "FROM employee e JOIN employee_salary es ON e.id = es.employee_id \n" + //
-            "WHERE e.id = ? \n" + //
-            "GROUP BY e.id");
-
-        showTeachingCostsStmt = connection.prepareStatement(
-            "SELECT cl.course_code, ci." + CI_PK_COLUMN_NAME  + " AS course_instance,\n" + 
-            "sp.period_name AS study_period, (?) AS planned_cost, (?) AS actual_cost \n" + //
-            "FROM course_instance ci JOIN course_version cv ON ci.course_version_id = cv.id \n" + //
-            "JOIN course_layout cl ON cv.course_layout_id = cl.id \n" + //
-            "JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\n" + //
-            "JOIN study_period sp ON cisp.study_period_id = sp.id \n" + //
-            "WHERE ci.id = ?"
-        );
+        computeTeachingCostStmt = connection.prepareStatement(
+                "SELECT\n" + //
+                "    cl.course_code,\n" + //
+                "    ci." + CI_PK_COLUMN_NAME  + " AS course_instance,\n" + //
+                "    sp.period_name AS study_period,\n" + //
+                "    SUM(\n" + //
+                "        eJs.avgS * pa.planned_hours + \n" + //
+                "        eJs.avgS * aaeh.admin_hours_per_employee +\n" + //
+                "        eJs.avgS * aaeh.exam_hours_per_employee\n" + //
+                "        ) planned_cost,\n" + //
+                "    SUM(\n" + //
+                "        eJS.avgS * pa.allocated_hours + \n" + //
+                "        eJs.avgS * aaeh.admin_hours_per_employee +\n" + //
+                "        eJs.avgS * aaeh.exam_hours_per_employee\n" + //
+                "        ) actual_cost \n" + //
+                "FROM\n" + //
+                     PLANNED_ACTIVITY_TABLE_NAME + " pa \n" + //
+                "    JOIN " + CI_TABLE_NAME + " ci ON pa.course_instance_id = ci." + CI_PK_COLUMN_NAME 
+                        + " AND ci." + CI_PK_COLUMN_NAME + " = ? AND ci.study_year = '2025'\n" + //
+                "    JOIN course_version cv ON ci.course_version_id = cv.id\n" + //
+                "    JOIN course_layout cl ON cv.course_layout_id = cl.id\n" + //
+                "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\n" + //
+                "    JOIN study_period sp ON cisp.study_period_id = sp.id\n" + //
+                "    JOIN admin_and_exam_hours_per_employee_and_course aaeh ON ci." + CI_PK_COLUMN_NAME 
+                        + " = aaeh.ciid\n" + //
+                "    JOIN (\n" + //
+                "        SELECT\n" + //
+                "            e.id,\n" + //
+                "            AVG(es.salary_per_hour) avgS\n" + //
+                "        FROM\n" + //
+                "            employee e \n" + //
+                "            JOIN employee_salary es ON e.id = es.employee_id\n" + //
+                "        GROUP BY\n" + //
+                "            es.employee_id,\n" + //
+                "            e.id\n" + //
+                "    ) eJs ON eJs.id = pa.employee_id \n" + //
+                "GROUP BY\n" + //
+                "    cl.course_code,\n" + //
+                "    ci." + CI_PK_COLUMN_NAME  + ",\n" + //
+                "    sp.period_name \n" + //
+                "ORDER BY course_instance;"
+            );
     }
-
+        
     /**
      * Task A1
      * 
@@ -233,130 +228,28 @@ public class TeachingActivityDAO {
      * @return TeachingCostDTO that contains wanted output row if execution is successful, else null
      * @throws SQLException if query can not be executed
      */
-
-    public CourseInstanceDTO fetchCourseInstance(int cid, String year) throws SQLException {
+    public TeachingCostDTO calculateTeachingCosts(int cid) throws SQLException {
             
-        CourseInstanceDTO courseInst = null;
+        TeachingCostDTO teachingCosts = null;
         
         try {
-            fetchCourseInstanceStmt.setInt(1, cid);
-            fetchCourseInstanceStmt.setString(2, year);
-            ResultSet rs = fetchCourseInstanceStmt.executeQuery();
+            computeTeachingCostStmt.setInt(1, cid);
+            ResultSet rs = computeTeachingCostStmt.executeQuery();
         
             while (rs.next()){
-                courseInst = new CourseInstanceDTO(
-                    rs.getInt("id"),
-                    rs.getInt("num_students"),
-                    rs.getString("study_year"),
-                    rs.getDouble("hp"),
-                    rs.getString("course_code")
-                );
-            }
-                    
-        } catch (SQLException se){
-            System.out.println("2pp" + se);
-        }
-        return courseInst;
-    }
-
-    public ArrayList<PlannedActivityDTO> fetchPlannedActivities(int courseId) throws SQLException {
-            
-        ArrayList<PlannedActivityDTO> allPlannedActivities = new ArrayList<>();
-        
-        try {
-            fetchPlannedActivityStmt.setInt(1, courseId);
-            ResultSet rs = fetchPlannedActivityStmt.executeQuery();
-        
-            while (rs.next()){
-                PlannedActivityDTO plannedActivity = new PlannedActivityDTO(
-                    rs.getInt("id"),
-                    rs.getInt("employee_id"),
-                    rs.getInt("course_instance_id"),
-                    rs.getInt("planned_hours"),
-                    rs.getInt("allocated_hours"),
-                    rs.getInt("activity_id"),
-                    rs.getDouble("factor")
-                );
-
-                allPlannedActivities.add(plannedActivity);
-            }
-                    
-        } catch (SQLException se){
-            System.out.println("3pp" + se);
-        }
-        return allPlannedActivities;
-    }
-
-    public AdminExamHoursDTO fetchAdminExamHoursForCourse(int cid) throws SQLException {
-            
-        AdminExamHoursDTO adminExamHours = null;
-        
-        try {
-            fetchAdminExamHoursForCourseStmt.setInt(1, cid);
-            ResultSet rs = fetchAdminExamHoursForCourseStmt.executeQuery();
-        
-            while (rs.next()){
-                adminExamHours = new AdminExamHoursDTO(
-                    rs.getInt("id"),
-                    rs.getInt("admin_hours_per_employee"),
-                    rs.getInt("exam_hours_per_employee")
-                );
-            }
-                    
-        } catch (SQLException se){
-            System.out.println("4pp" + se);
-        }
-        return adminExamHours;
-    }
-
-    public AvgSalaryDTO fetchAvgSalaryEmployee(int eid) throws SQLException {
-            
-        AvgSalaryDTO avgSalary = null;
-        
-        try {
-            fetchAvgSalaryEmployeeStmt.setInt(1, eid);
-            ResultSet rs = fetchAvgSalaryEmployeeStmt.executeQuery();
-        
-            while (rs.next()){
-                avgSalary = new AvgSalaryDTO(
-                    rs.getInt("id"),
-                    rs.getDouble("average_salary")
-                );
-            }
-                    
-        } catch (SQLException se){
-            System.out.println("5pp"+se);
-        }
-        return avgSalary;
-    }
-
-    public ArrayList<TeachingCostDTO> showTeachingCostsForCourse(double plannedCost, double actCost, int courseId) 
-        throws SQLException {
-            
-        ArrayList<TeachingCostDTO> allTeachingCosts = new ArrayList<>();
-        
-        try {
-            showTeachingCostsStmt.setDouble(1, plannedCost);
-            showTeachingCostsStmt.setDouble(2, actCost);
-            showTeachingCostsStmt.setInt(3, courseId);
-            ResultSet rs = showTeachingCostsStmt.executeQuery();
-        
-            while (rs.next()){
-                TeachingCostDTO teachingCosts = new TeachingCostDTO(
+                teachingCosts = new TeachingCostDTO(
                     rs.getString("course_code"), 
                     rs.getInt("course_instance"), 
                     rs.getString("study_period"),
                     rs.getDouble("planned_cost"),
                     rs.getDouble("actual_cost")
                 );
-
-                allTeachingCosts.add(teachingCosts);
             }
                     
         } catch (SQLException se){
-            System.out.println("7pp" + se);
+            System.out.println(se);
         }
-        return allTeachingCosts;
+        return teachingCosts;
     }
 
 
@@ -380,14 +273,26 @@ public class TeachingActivityDAO {
             handleException(failureMsg, sqle);
         }    
     }
-    public void showTAs(String activityName) throws TeachingActivityDBException{
+    public ArrayList<PAjoinTADTO> showTAs(String activityName) throws TeachingActivityDBException{
         String failureMsg = "Error";
+        ArrayList<PAjoinTADTO> joinedTable = new ArrayList<>();;
         try{
             displayTAStmt.setString(1, activityName);
-            connection.commit();
+            ResultSet rs = displayTAStmt.executeQuery();
+        
+            while (rs.next()){
+                joinedTable.add( new PAjoinTADTO(
+                        rs.getInt("employee_id"), 
+                        rs.getInt("course_instance_id"), 
+                        rs.getInt("planned_hours"),
+                        rs.getInt("allocated_hours"),
+                        rs.getString("activity_name")
+                ));
+            }
         }catch (SQLException sqle) {
             handleException(failureMsg, sqle);
         }
+        return joinedTable;
     }
 
     private int createTeachingActivity(String activityName, double factor) throws TeachingActivityDBException {
