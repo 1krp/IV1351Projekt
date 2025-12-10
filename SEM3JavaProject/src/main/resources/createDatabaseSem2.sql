@@ -56,9 +56,6 @@ CREATE TABLE employee_salary (
  salary_enforcement_date DATE NOT NULL,
  salary_per_hour DOUBLE PRECISION NOT NULL
 );
-SELECT planned_activity.employee_id, planned_activity.course_instance_id, planned_activity.planned_hours, planned_activity.allocated_hours, teaching_activity.activity_name
-FROM planned_activity
-INNER JOIN teaching_activity ON planned_activity.activity_id = teaching_activity.id WHERE teaching_activity.activity_name =
 
 CREATE TABLE employment_constants (
  id SERIAL PRIMARY KEY,
