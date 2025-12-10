@@ -37,7 +37,7 @@ import se.kth.iv1351.bankjdbc.model.DTO.TADTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.AdminExamHoursDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.AvgSalaryDTO;
+import se.kth.iv1351.bankjdbc.model.DTO.SalaryDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.CourseInstanceDTO;
 
 /**
@@ -71,7 +71,7 @@ public class TeachingActivityDAO {
     private PreparedStatement fetchCourseInstanceStmt;
     private PreparedStatement fetchPlannedActivityStmt;
     private PreparedStatement fetchAdminExamHoursForCourseStmt;
-    private PreparedStatement fetchAvgSalaryEmployeeStmt;
+    private PreparedStatement fetchSalaryEmployeeStmt;
     private PreparedStatement showTeachingCostsStmt;
     private PreparedStatement updateTeacherAllocationLimitStmt;
     private PreparedStatement updateNumStudendsInCIStmt;
@@ -149,6 +149,19 @@ public class TeachingActivityDAO {
         }
     }
 
+    /**
+     * Rollbacks the current transaction.
+     * 
+     * @throws TeachingActivityDBException If unable to commit the current transaction.
+     */
+    public void rollback(){
+        try {
+            connection.rollback();
+        } catch (SQLException e) {
+            System.out.println("Problem when rollback: " + e.getMessage());
+        }
+    }
+
     private void connectToDB() throws ClassNotFoundException, SQLException {
         connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
                 "postgres", "cbmmlp");
@@ -199,24 +212,19 @@ public class TeachingActivityDAO {
             "FROM planned_activity pa JOIN teaching_activity ta ON pa.activity_id = ta.id\n" + //
             "JOIN course_instance ci ON ci.id = pa.course_instance_id AND ci.id = ? \n" + //
             "JOIN course_version cv ON ci.course_version_id = cv.id\n" + //
-            "JOIN course_layout cl ON cv.course_layout_id = cl.id\n" + //
-            "FOR UPDATE"
+            "JOIN course_layout cl ON cv.course_layout_id = cl.id FOR UPDATE"
         );
 
         fetchAdminExamHoursForCourseStmt = connection.prepareStatement(
             "SELECT ci.id, aaeh.admin_hours_per_employee, aaeh.exam_hours_per_employee \n" + //
             "FROM course_instance ci JOIN admin_and_exam_hours_per_employee_and_course aaeh \n" + //
             "ON ci." + CI_PK_COLUMN_NAME + " = aaeh.ciid \n" + //
-            "WHERE ci." + CI_PK_COLUMN_NAME + " = ? \n" + //
-            "FOR UPDATE"
+            "WHERE ci." + CI_PK_COLUMN_NAME + " = ?"
         );
 
-        fetchAvgSalaryEmployeeStmt = connection.prepareStatement(
-            "SELECT e.id, AVG(es.salary_per_hour) average_salary \n" + //
-            "FROM employee e JOIN employee_salary es ON e.id = es.employee_id \n" + //
-            "WHERE e.id = ? \n" + //
-            "FOR UPDATE \n" + //
-            "GROUP BY e.id");
+        fetchSalaryEmployeeStmt = connection.prepareStatement(
+            "SELECT es.employee_id, es.salary_per_hour \n" + //
+            "FROM employee_salary es WHERE es.employee_id = ? FOR UPDATE");
 
         showTeachingCostsStmt = connection.prepareStatement(
             "SELECT cl.course_code, ci." + CI_PK_COLUMN_NAME  + " AS course_instance,\n" + 
@@ -315,19 +323,20 @@ public class TeachingActivityDAO {
         return adminExamHours;
     }
 
-    public AvgSalaryDTO fetchAvgSalaryEmployee(int eid) throws TeachingActivityDBException {
+    public ArrayList<SalaryDTO> fetchSalaryEmployee(int eid) throws TeachingActivityDBException {
             
-        AvgSalaryDTO avgSalary = null;
+        ArrayList<SalaryDTO> salaries = new ArrayList<>();
         
         try {
-            fetchAvgSalaryEmployeeStmt.setInt(1, eid);
-            ResultSet rs = fetchAvgSalaryEmployeeStmt.executeQuery();
+            fetchSalaryEmployeeStmt.setInt(1, eid);
+            ResultSet rs = fetchSalaryEmployeeStmt.executeQuery();
         
             while (rs.next()){
-                avgSalary = new AvgSalaryDTO(
-                    rs.getInt("id"),
-                    rs.getDouble("average_salary")
+                SalaryDTO salary = new SalaryDTO(
+                    rs.getInt("employee_id"),
+                    rs.getDouble("salary_per_hour")
                 );
+                salaries.add(salary);
             }
 
         } catch (SQLException se){
@@ -335,7 +344,7 @@ public class TeachingActivityDAO {
             handleException(erMsg, se);
         }
         
-        return avgSalary;
+        return salaries;
     }
 
     public ArrayList<TeachingCostDTO> showTeachingCostsForCourse(double plannedCost, double actCost, int courseId) 
@@ -431,7 +440,7 @@ public class TeachingActivityDAO {
     }
 
     private void handleException(String failureMsg, Exception cause) throws TeachingActivityDBException {
-        String completeFailureMsg = failureMsg;
+        String completeFailureMsg = failureMsg + cause.getMessage();
         try {
             connection.rollback();
         } catch (SQLException rollbackExc) {
@@ -440,9 +449,7 @@ public class TeachingActivityDAO {
         }
 
         if (cause != null) {
-            throw new TeachingActivityDBException(failureMsg, cause);
-        } else {
-            throw new TeachingActivityDBException(failureMsg);
+            throw new TeachingActivityDBException(completeFailureMsg, cause);
         }
     }
 
