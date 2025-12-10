@@ -105,7 +105,12 @@ public class BlockingInterpreter {
                         ctrl.updateTeacherAllocationLimit(Integer.parseInt(cmdLine.getParameter(0)));
                         break;
                     case ADD_NEW_TEACHING_ACTIVITY:
-                        /* TO DO */
+                        ctrl.insertNewActivityWithAssociations( cmdLine.getParameter(0),
+                                                                Double.parseDouble(cmdLine.getParameter(1)),
+                                                                Integer.parseInt(cmdLine.getParameter(2)),
+                                                                Integer.parseInt(cmdLine.getParameter(3)),
+                                                                Integer.parseInt(cmdLine.getParameter(4)),
+                                                                Integer.parseInt(cmdLine.getParameter(5)));
                         break;
                     default:
                         System.out.println("illegal command");

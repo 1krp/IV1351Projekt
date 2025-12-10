@@ -45,7 +45,7 @@ public class Main {
         try {
         new BlockingInterpreter(new Controller()).handleCmds();
         } catch(TeachingActivityDBException tadbe) {
-            System.out.println("Could not connect to Bank db.");
+            System.out.println("Could not connect to Teaching db.");
             tadbe.printStackTrace();
         }
     }

@@ -34,6 +34,7 @@ import java.util.List;
 import se.kth.iv1351.bankjdbc.model.TeachingActivity;
 import se.kth.iv1351.bankjdbc.DTO.TeachingCostDTO;
 import se.kth.iv1351.bankjdbc.model.TADTO;
+import se.kth.iv1351.bankjdbc.model.PlannedActivityDTO;
 
 /**
  * This data access object (DAO) encapsulates all database calls in the bank
@@ -47,13 +48,18 @@ public class TeachingActivityDAO {
     private static final String TEACHING_ACTIVITY_COLUMN_FACTOR = "factor";
     private static final String PLANNED_ACTIVITY_TABLE_NAME = "planned_activity";
     private static final String PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID = "activity_id";
+    private static final String PLANNED_ACTIVITY_COLUMN_EMPLOYEE_ID = "employee_id";
+    private static final String PLANNED_ACTIVITY_COLUMN_COURSE_INSTANCE_ID = "course_instance_id";
+
     private static final String EC_C_TABLE_NAME = "employment_constants";
     private static final String EC_C_COLUMN_NAME = "max_courses";
     private static final String EC_C_PK_COLUMN_NAME = "id";
     private static final String CI_TABLE_NAME = "course_instance";
     private static final String CI_COLUMN_NAME = "num_students";
     private static final String CI_PK_COLUMN_NAME = "id";
-
+    private static final String PLANNED_ACTIVITY_PK_ID = "id";
+    private static final String PLANNED_ACTIVITY_COLUMN_PLANNED_HOURS = "planned_hours";
+    private static final String PLANNED_ACTIVITY_COLUMN_ALLOCATED_HOURS = "allocated_hours"; 
     private Connection connection;
     private PreparedStatement updateTeacherAllocationLimitStmt;
     private PreparedStatement updateNumStudendsInCIStmt;
@@ -62,6 +68,7 @@ public class TeachingActivityDAO {
     private PreparedStatement createTAPAconnectionStmt;
     private PreparedStatement findTAStmt;
     private PreparedStatement computeTeachingCostStmt;
+    private PreparedStatement insertNewActivityStmt;
 
     /**
      * Constructs a new DAO object connected to the bank database.
@@ -133,8 +140,8 @@ public class TeachingActivityDAO {
     }
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
-        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
-                "postgres", "asd123");
+        connection = DriverManager.getConnection(" ",
+                " ", " ");
         connection.setAutoCommit(false);
     }
 
@@ -149,10 +156,15 @@ public class TeachingActivityDAO {
                 + "(" + TEACHING_ACTIVITY_COLUMN_FACTOR + ") VALUES (?)");
 
         createTAPAconnectionStmt = connection.prepareStatement("INSERT INTO " + PLANNED_ACTIVITY_TABLE_NAME + 
-        "(" + PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID + ") VALUES ("+ TEACHING_ACTIVITY_PK_COLUMN_NAME +")");
+        "(" + PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID + ") VALUES ("+ TEACHING_ACTIVITY_PK_COLUMN_NAME +") WHERE "+ PLANNED_ACTIVITY_PK_ID +" = ?");
         
         findTAStmt = connection.prepareStatement("SELECT " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME
                 + " FROM " + TEACHING_ACTIVITY_TABLE_NAME + " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " = ?"); //Om TA redan finns
+
+        insertNewActivityStmt = connection.prepareStatement("INSERT INTO "+ PLANNED_ACTIVITY_TABLE_NAME +"(" 
+        + PLANNED_ACTIVITY_COLUMN_EMPLOYEE_ID + ", " + PLANNED_ACTIVITY_COLUMN_COURSE_INSTANCE_ID + ", " +
+        PLANNED_ACTIVITY_COLUMN_PLANNED_HOURS + ", "+ PLANNED_ACTIVITY_COLUMN_ALLOCATED_HOURS + ", "
+         + PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID + ") VALUES (?, ?, ?, ?, ?)" );      
          
         updateNumStudendsInCIStmt = connection.prepareStatement("UPDATE " + CI_TABLE_NAME 
                 + " SET " + CI_COLUMN_NAME + " = ? WHERE " + CI_PK_COLUMN_NAME + " = ?");
@@ -215,32 +227,57 @@ public class TeachingActivityDAO {
         return calculatedTeachingCosts;
     }
 
-    public void createTeachingActivity(TADTO TA) throws TeachingActivityDBException {
-        String failureMsg = "Could not create teaching activity: " + TA.getTAName();
-        boolean updatedRows = false;
+
+    public void createTAInPA(String activityName, double factor, int employee_id, int course_instance_id, int planned_hours, int allocated_hours)
+     throws TeachingActivityDBException {
+        int activityId = createTeachingActivity(activityName,factor);
+        String failureMsg = "Could not create the planned activity with activity id: " + activityId;
+        int updatedRows = 0;
         try {
-            String activityName = findTAByName(TA.getTAName());
-            if (activityName == null) {
-                createTAStmt.setString(1, TA.getTAName());
-                createTAFactorStmt.setDouble(2, TA.getFactor());
-                updatedRows = createTAStmt.executeUpdate()==1 && createTAFactorStmt.executeUpdate()==1;
-                if (updatedRows==false) {
-                    handleException(failureMsg, null);
-                }
+            insertNewActivityStmt.setInt(1, employee_id);
+            insertNewActivityStmt.setInt(2, course_instance_id);
+            insertNewActivityStmt.setInt(3, planned_hours);
+            insertNewActivityStmt.setInt(4, allocated_hours);
+            insertNewActivityStmt.setInt(5, activityId);
+        updatedRows = insertNewActivityStmt.executeUpdate(); 
+        if (updatedRows != 1) {
+                handleException(failureMsg, null);
             }
         connection.commit();
         } catch (SQLException sqle) {
             handleException(failureMsg, sqle);
-        }
+        }    
     }
-    private String findTAByName(String activityName) throws SQLException {
+
+    private int createTeachingActivity(String activityName, double factor) throws TeachingActivityDBException {
+        String failureMsg = "Could not create teaching activity: " + activityName;
+        boolean updatedRows = false;
+        int activityId = 0;
+        try {
+            activityId = findTAByName(activityName);
+            if (activityId == 0) {
+                createTAStmt.setString(1, activityName);
+                createTAFactorStmt.setDouble(2, factor);
+                updatedRows = createTAStmt.executeUpdate()==1 && createTAFactorStmt.executeUpdate()==1;
+                if (updatedRows==false) {
+                    handleException(failureMsg, null);
+                }
+            }    
+        connection.commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+        return activityId;
+    }
+
+    private int findTAByName(String activityName) throws SQLException {
         ResultSet result = null;
-        findTAStmt.setString(1, activityName);//kan vara fel kolumn
+        findTAStmt.setString(1, activityName);
         result = findTAStmt.executeQuery();
         if (result.next()) {
-            return result.getString(TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME);
+            return result.getInt("id");
         }
-        return null;
+        return 0;
     }
 
     private void handleException(String failureMsg, Exception cause) throws TeachingActivityDBException {
