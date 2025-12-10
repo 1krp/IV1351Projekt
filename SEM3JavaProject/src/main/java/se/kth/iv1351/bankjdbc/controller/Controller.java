@@ -137,13 +137,11 @@ public class Controller {
 
     public void allocatePlannedActivity(int employeeId, int courseInstanceId, int plannedHours, int activityID, int allocatedHours, String year) throws RejectedException {
         String failureMsg = "could not allocate activity";
-
-        if (employeeId < 1 || courseInstanceId < 1 || plannedHours < 1 || employeeId < 1){
-            throw new RejectedException(failureMsg);
-        }
-
         try{
             tAllocatePA.allocatePlannedActivity(employeeId, courseInstanceId, plannedHours, activityID, allocatedHours, year);
+        }
+        catch(TeachingActivityDBException tadbe){
+            throw new RejectedException(failureMsg, tadbe);
         }catch (Exception e) {
             commitOngoingTransaction(failureMsg);
             throw new RejectedException(failureMsg, e);
