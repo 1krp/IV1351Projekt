@@ -3,6 +3,7 @@ package se.kth.iv1351.bankjdbc.model;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.model.DTO.AdminExamHoursDTO;
+import se.kth.iv1351.bankjdbc.model.DTO.SalaryDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.CourseInstanceDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
@@ -29,19 +30,36 @@ public class TeachingCostCalculator {
 
             for (PlannedActivityDTO act : plannedActivities) {
 
-                double empSalary = dao.fetchAvgSalaryEmployee(act.getEmpId()).getAvgSalary();
+                double avgSalary = calcAvgSalary(dao.fetchSalaryEmployee(act.getEmpId()));
 
                 plannedCost += (act.getPlannedHours() + adminExamHours.getAdminHours() + adminExamHours.getExamHours())
-                    * empSalary;
+                    * avgSalary;
                 
                 actualCost += (act.getAllocatedHours() + adminExamHours.getAdminHours() + adminExamHours.getExamHours())
-                    * empSalary;
+                    * avgSalary;
             }
 
-            return dao.showTeachingCostsForCourse(plannedCost, actualCost, courseInstance.getId());
+            ArrayList<TeachingCostDTO> result = dao.showTeachingCostsForCourse(plannedCost, actualCost, courseInstance.getId());
+
+            dao.commit();
+
+            return result;
         } catch (TeachingActivityDBException tae) {
+            dao.rollback();
             System.out.println("Error when calculating teaching costs: " + tae.getMessage());
         }
         return null;
+    }
+
+    private double calcAvgSalary(ArrayList<SalaryDTO> salaries){
+        double total = 0;
+        int n = 0;
+
+        for (SalaryDTO sal : salaries){
+            total += sal.getSalary();
+            n ++;
+        }
+
+        return total/n;
     }
 }

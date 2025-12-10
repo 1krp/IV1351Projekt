@@ -98,14 +98,3 @@ CREATE MATERIALIZED VIEW teacher_allocated_hours_summary AS -- task 2
     JOIN examAdminHrs eah ON eah.ciid=ci.id
     JOIN planned_activity pa ON ci.id=pa.course_instance_id
     ORDER BY ciid
-
-
-SELECT 
-    cl.course_code, 
-    ci.id AS course_instance, 
-    sp.period_name AS study_period
-FROM course_instance ci JOIN course_version cv ON ci.course_version_id = cv.id
-    JOIN course_layout cl ON cv.course_layout_id = cl.id
-    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id
-    JOIN study_period sp ON cisp.study_period_id = sp.id
-WHERE ci.id = 3;

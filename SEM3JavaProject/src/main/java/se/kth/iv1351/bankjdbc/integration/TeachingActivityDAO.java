@@ -33,8 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.kth.iv1351.bankjdbc.model.DTO.*;
-
-
 /**
  * This data access object (DAO) encapsulates all database calls in the bank
  * application. No code outside this class shall have any knowledge about the
@@ -52,6 +50,8 @@ public class TeachingActivityDAO {
     private static final String PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID = "activity_id";
     private static final String PLANNED_ACTIVITY_COLUMN_EMPLOYEE_ID = "employee_id";
     private static final String PLANNED_ACTIVITY_COLUMN_COURSE_INSTANCE_ID = "course_instance_id";
+    private static final String PLANNED_ACTIVITY_PK_ID = "id";
+    
 
     private static final String EC_C_TABLE_NAME = "employment_constants";
     private static final String EC_C_COLUMN_NAME = "max_courses";
@@ -76,9 +76,10 @@ public class TeachingActivityDAO {
     private PreparedStatement fetchCourseInstanceStmt;
     private PreparedStatement fetchPlannedActivityStmt;
     private PreparedStatement fetchAdminExamHoursForCourseStmt;
-    private PreparedStatement fetchAvgSalaryEmployeeStmt;
+    private PreparedStatement fetchSalaryEmployeeStmt;
     private PreparedStatement showTeachingCostsStmt;
-        
+    private PreparedStatement deallocatePAStmt;
+    
 
     /**
      * Constructs a new DAO object connected to the database.
@@ -134,6 +135,21 @@ public class TeachingActivityDAO {
         }
     }
 
+    public void deallocatePlannedActivity(int plannedActivityId) throws TeachingActivityDBException {
+        String failureMsg = "Could not deallocate the planned activity with id: " + plannedActivityId;
+        try{
+            deallocatePAStmt.setInt(1, plannedActivityId);
+
+            int updatedRows = deallocatePAStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+            connection.commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
+
     /**
      * Commits the current transaction.
      * 
@@ -147,9 +163,22 @@ public class TeachingActivityDAO {
         }
     }
 
+    /**
+     * Rollbacks the current transaction.
+     * 
+     * @throws TeachingActivityDBException If unable to commit the current transaction.
+     */
+    public void rollback(){
+        try {
+            connection.rollback();
+        } catch (SQLException e) {
+            System.out.println("Problem when rollback: " + e.getMessage());
+        }
+    }
+
     private void connectToDB() throws ClassNotFoundException, SQLException {
-        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres",
-                "Sparfbag", "Sagastass20!");
+        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
+                "postgres", "asd123");
         connection.setAutoCommit(false);
     }
 
@@ -199,24 +228,19 @@ public class TeachingActivityDAO {
             "FROM planned_activity pa JOIN teaching_activity ta ON pa.activity_id = ta.id\n" + //
             "JOIN course_instance ci ON ci.id = pa.course_instance_id AND ci.id = ? \n" + //
             "JOIN course_version cv ON ci.course_version_id = cv.id\n" + //
-            "JOIN course_layout cl ON cv.course_layout_id = cl.id\n" + //
-            "FOR UPDATE"
+            "JOIN course_layout cl ON cv.course_layout_id = cl.id FOR UPDATE"
         );
 
         fetchAdminExamHoursForCourseStmt = connection.prepareStatement(
             "SELECT ci.id, aaeh.admin_hours_per_employee, aaeh.exam_hours_per_employee \n" + //
             "FROM course_instance ci JOIN admin_and_exam_hours_per_employee_and_course aaeh \n" + //
             "ON ci." + CI_PK_COLUMN_NAME + " = aaeh.ciid \n" + //
-            "WHERE ci." + CI_PK_COLUMN_NAME + " = ? \n" + //
-            "FOR UPDATE"
+            "WHERE ci." + CI_PK_COLUMN_NAME + " = ?"
         );
 
-        fetchAvgSalaryEmployeeStmt = connection.prepareStatement(
-            "SELECT e.id, AVG(es.salary_per_hour) average_salary \n" + //
-            "FROM employee e JOIN employee_salary es ON e.id = es.employee_id \n" + //
-            "WHERE e.id = ? \n" + //
-            "FOR UPDATE \n" + //
-            "GROUP BY e.id");
+        fetchSalaryEmployeeStmt = connection.prepareStatement(
+            "SELECT es.employee_id, es.salary_per_hour \n" + //
+            "FROM employee_salary es WHERE es.employee_id = ? FOR UPDATE");
 
         showTeachingCostsStmt = connection.prepareStatement(
             "SELECT cl.course_code, ci." + CI_PK_COLUMN_NAME  + " AS course_instance,\n" + 
@@ -228,6 +252,9 @@ public class TeachingActivityDAO {
             "WHERE ci.id = ?"
         );
         showTARowsStmt = connection.prepareStatement("SELECT * FROM "+ TEACHING_ACTIVITY_TABLE_NAME);
+
+        deallocatePAStmt = connection.prepareStatement("DELETE FROM " + PLANNED_ACTIVITY_TABLE_NAME 
+                + " WHERE " + PLANNED_ACTIVITY_PK_ID + "= ?");
     }
         
     /**
@@ -315,29 +342,28 @@ public class TeachingActivityDAO {
         return adminExamHours;
     }
 
-    public AvgSalaryDTO fetchAvgSalaryEmployee(int eid) throws TeachingActivityDBException {
+    public ArrayList<SalaryDTO> fetchSalaryEmployee(int eid) throws TeachingActivityDBException {
             
-        AvgSalaryDTO avgSalary = null;
+        ArrayList<SalaryDTO> salaries = new ArrayList<>();
         
         try {
-            fetchAvgSalaryEmployeeStmt.setInt(1, eid);
-            ResultSet rs = fetchAvgSalaryEmployeeStmt.executeQuery();
+            fetchSalaryEmployeeStmt.setInt(1, eid);
+            ResultSet rs = fetchSalaryEmployeeStmt.executeQuery();
         
             while (rs.next()){
-                avgSalary = new AvgSalaryDTO(
-                    rs.getInt("id"),
-                    rs.getDouble("average_salary")
+                SalaryDTO salary = new SalaryDTO(
+                    rs.getInt("employee_id"),
+                    rs.getDouble("salary_per_hour")
                 );
+                salaries.add(salary);
             }
-
-            commit();
 
         } catch (SQLException se){
             String erMsg = "Error when trying to fetch avg employee salary";
             handleException(erMsg, se);
         }
         
-        return avgSalary;
+        return salaries;
     }
 
     public ArrayList<TeachingCostDTO> showTeachingCostsForCourse(double plannedCost, double actCost, int courseId) 
@@ -476,7 +502,7 @@ public class TeachingActivityDAO {
     }
 
     private void handleException(String failureMsg, Exception cause) throws TeachingActivityDBException {
-        String completeFailureMsg = failureMsg;
+        String completeFailureMsg = failureMsg + cause.getMessage();
         try {
             connection.rollback();
         } catch (SQLException rollbackExc) {
@@ -485,9 +511,7 @@ public class TeachingActivityDAO {
         }
 
         if (cause != null) {
-            throw new TeachingActivityDBException(failureMsg, cause);
-        } else {
-            throw new TeachingActivityDBException(failureMsg);
+            throw new TeachingActivityDBException(completeFailureMsg, cause);
         }
     }
 
