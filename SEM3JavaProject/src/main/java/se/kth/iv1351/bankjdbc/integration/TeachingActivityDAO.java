@@ -308,7 +308,7 @@ public class TeachingActivityDAO {
             "FROM course_instance ci \n" + //
             "JOIN course_version cv ON ci.course_version_id = cv.id \n" + //
             "JOIN course_layout cl ON cv.course_layout_id = cl.id \n" + //
-            "WHERE ci.id = ? AND ci.study_year = ?"
+            "WHERE ci.id = ? AND ci.study_year = ? FOR UPDATE"
         );
 
         fetchPlannedActivityStmt = connection.prepareStatement(
