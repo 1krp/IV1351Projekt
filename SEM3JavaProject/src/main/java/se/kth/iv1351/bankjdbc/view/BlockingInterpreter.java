@@ -120,6 +120,7 @@ public class BlockingInterpreter {
                         break;
                     case SHOW_TEACHING_ACTIVITY:
                         ctrl.showTeachingActivity(cmdLine.getParameter(0));
+                        break;
                     default:
                         System.out.println("illegal command");
                 }
