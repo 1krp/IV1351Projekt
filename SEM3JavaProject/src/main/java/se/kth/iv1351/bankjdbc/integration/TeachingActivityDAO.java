@@ -140,6 +140,29 @@ public class TeachingActivityDAO {
         }
     }
 
+
+    public List<Account> findTeacherAllocationPeriod(int year, int employeeId) throws TeachingActivityDBException {
+        String failureMsg = "Could not search for teacher allocation pressure";
+        ResultSet result = null;
+        List<Account> accounts = new ArrayList<>();
+        try {
+            findPAsForTeacherStmt.setInt(1, year);
+            findPAsForTeacherStmt.setInt(1, employeeId);
+            result = findPAsForTeacherStmt.executeQuery();
+            while (result.next()) {
+                accounts.add(new Account(
+                    result.getInt("num_courses"),
+                    result.getString("period_name")));
+            }
+            connection.commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        } finally {
+            closeResultSet(failureMsg, result);
+        }
+        return accounts;
+    }
+
     /**
      * Commits the current transaction.
      * 
