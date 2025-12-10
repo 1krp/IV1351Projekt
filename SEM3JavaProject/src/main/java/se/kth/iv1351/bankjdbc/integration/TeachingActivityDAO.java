@@ -33,6 +33,7 @@ import java.util.List;
 
 import se.kth.iv1351.bankjdbc.model.TeacherAllocation;
 import se.kth.iv1351.bankjdbc.model.TeachingActivity;
+import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TADTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeacherAllocationDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
@@ -71,6 +72,7 @@ public class TeachingActivityDAO {
     private PreparedStatement deallocatePAStmt;
     private PreparedStatement findPAsForTeacherStmt;
     private PreparedStatement findMaxCoursesPerTeacherStmt;
+    private PreparedStatement createPlannedActivityStmt;
     
 
     /**
@@ -184,6 +186,27 @@ public class TeachingActivityDAO {
         return 0;
     }
 
+    public void createPlannedActivity(PlannedActivityDTO plannedDTO) throws TeachingActivityDBException {
+        String failureMsg = "Could not allocate activity";
+        int updatedRows = 0;
+        try {
+            createPlannedActivityStmt.setInt(1, plannedDTO.getEmpId());
+            createPlannedActivityStmt.setInt(2, plannedDTO.getCourseId());
+            createPlannedActivityStmt.setInt(3, plannedDTO.getPlannedHours());
+            createPlannedActivityStmt.setInt(4, plannedDTO.getAllocatedHours());
+            createPlannedActivityStmt.setInt(5, plannedDTO.getTActivity());
+
+            updatedRows = createPlannedActivityStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+
+            connection.commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
+
     /**
      * Commits the current transaction.
      * 
@@ -289,6 +312,9 @@ public class TeachingActivityDAO {
         
         findMaxCoursesPerTeacherStmt = connection.prepareStatement("SELECT " + EC_C_COLUMN_NAME 
                 + " FROM " + EC_C_TABLE_NAME + " WHERE " + EC_C_PK_COLUMN_NAME + "=1" );
+        
+        createPlannedActivityStmt = connection.prepareStatement("INSERT INTO " + PLANNED_ACTIVITY_TABLE_NAME 
+                + "(employee_id, course_instance_id, planned_hours, allocated_hours, activity_id) VALUES (?, ?, ?, ?, ?)");
     }
 
     /**

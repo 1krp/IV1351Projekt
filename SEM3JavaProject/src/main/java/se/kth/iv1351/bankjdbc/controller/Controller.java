@@ -33,6 +33,7 @@ import se.kth.iv1351.bankjdbc.model.RejectedException;
 import se.kth.iv1351.bankjdbc.model.TeacherAllocationLimit;
 import se.kth.iv1351.bankjdbc.model.DTO.TeacherAllocationDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
+import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
 
 /**
  * This is the application's only controller, all calls to the model pass here.
@@ -111,6 +112,17 @@ public class Controller {
             throw new RejectedException(failureMsg, e);
         }
     }
+
+    public void createPlannedActivity(PlannedActivityDTO plannedDTO) throws RejectedException {
+        String failureMsg = "Could not insert activity";
+
+        try{
+            TeachingActivityDb.createPlannedActivity(plannedDTO);
+        }catch (Exception e) {
+            commitOngoingTransaction(failureMsg);
+            throw new RejectedException(failureMsg, e);
+        }
+    }
     
     public List<TeacherAllocationDTO> findTeacherAllocationsExceedingLimit(int year, int employeeId)
             throws RejectedException {
@@ -130,8 +142,17 @@ public class Controller {
         }
     }
     
-    public void allocatePlannedActivity(int employeeId, int courseInstanceId, int plannedHours, int activityID, int allocatedHours) throws RejectedException {
+    public void allocatePlannedActivity(int employeeId, int courseInstanceId, int plannedHours, int activityID, int allocatedHours, int year) throws RejectedException {
         String failureMsg = "Could not allocate activity for employee: " + employeeId;
+
+       if(employeeId < 1 || courseInstanceId < 1 || activityID < 1 || year < 2020){
+            throw new RejectedException(failureMsg);
+       }
+
+       try{
+        double factor = 1;
+        PlannedActivityDTO plannedDTO = new PlannedActivityDTO(0, employeeId, courseInstanceId, plannedHours, allocatedHours, activityID, factor);
+       }
     }
 
     private void commitOngoingTransaction(String failureMsg) throws RejectedException {
