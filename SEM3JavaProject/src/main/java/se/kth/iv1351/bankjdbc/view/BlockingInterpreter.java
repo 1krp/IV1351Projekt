@@ -103,7 +103,13 @@ public class BlockingInterpreter {
                                                                 Integer.parseInt(cmdLine.getParameter(1)));
                         break;
                     case ALLOCATE_PLANNED_ACTIVITY:
-                        /* TO DO */
+                        ctrl.allocatePlannedActivity(   Integer.parseInt(cmdLine.getParameter(0)), 
+                                                        Integer.parseInt(cmdLine.getParameter(1)),
+                                                        Integer.parseInt(cmdLine.getParameter(2)),
+                                                        Integer.parseInt(cmdLine.getParameter(3)),
+                                                        Integer.parseInt(cmdLine.getParameter(4)),
+                                                        cmdLine.getParameter(5));
+                        System.out.println("Planned activity allocated.");
                         break;
                     case DEALLOCATE_PLANNED_ACTIVITY:
                         ctrl.deallocatePlannedActivity(Integer.parseInt(cmdLine.getParameter(0)));

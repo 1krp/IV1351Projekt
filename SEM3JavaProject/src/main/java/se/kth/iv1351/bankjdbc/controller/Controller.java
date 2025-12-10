@@ -32,6 +32,7 @@ import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.model.RejectedException;
 import se.kth.iv1351.bankjdbc.model.TeachingCostCalculator;
 import se.kth.iv1351.bankjdbc.model.DTO.PAjoinTADTO;
+import se.kth.iv1351.bankjdbc.model.TeacherAllocatePA;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 
 /**
@@ -43,6 +44,7 @@ import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 public class Controller {
     private final TeachingActivityDAO TeachingActivityDb;
     private final TeachingCostCalculator tcCalculator;
+    private final TeacherAllocatePA tAllocatePA;
 
     /**
      * Creates a new instance, and retrieves a connection to the database.
@@ -52,6 +54,7 @@ public class Controller {
     public Controller() throws TeachingActivityDBException {
         TeachingActivityDb = new TeachingActivityDAO();
         tcCalculator = new TeachingCostCalculator(TeachingActivityDb);
+        tAllocatePA = new TeacherAllocatePA(TeachingActivityDb);
     }
 
     public ArrayList<TeachingCostDTO> fetchTeachingCostsForCourse(int cid, String year){
@@ -132,6 +135,19 @@ public class Controller {
         try {
             TeachingActivityDb.deallocatePlannedActivity(plannedActivityId); 
         } catch (Exception e) {
+            commitOngoingTransaction(failureMsg);
+            throw new RejectedException(failureMsg, e);
+        }
+    }
+
+    public void allocatePlannedActivity(int employeeId, int courseInstanceId, int plannedHours, int activityID, int allocatedHours, String year) throws RejectedException {
+        String failureMsg = "could not allocate activity";
+        try{
+            tAllocatePA.allocatePlannedActivity(employeeId, courseInstanceId, plannedHours, activityID, allocatedHours, year);
+        }
+        catch(TeachingActivityDBException tadbe){
+            throw new RejectedException(failureMsg, tadbe);
+        }catch (Exception e) {
             commitOngoingTransaction(failureMsg);
             throw new RejectedException(failureMsg, e);
         }
