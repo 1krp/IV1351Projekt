@@ -10,16 +10,19 @@ public class TeacherAllocation implements TeacherAllocationDTO {
     public TeacherAllocation(int numCourses, String period){
         this.numCourses = numCourses;
         this.period = period;
+
     }
 
+    @Override
     public int getNumCourses(){
         return numCourses;
     }
 
+    @Override
     public String getPeriod(){
         return period;
     }
 
-    
+
 }
  

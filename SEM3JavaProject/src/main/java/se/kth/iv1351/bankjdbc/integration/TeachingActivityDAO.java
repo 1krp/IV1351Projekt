@@ -31,8 +31,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import se.kth.iv1351.bankjdbc.model.TeacherAllocation;
 import se.kth.iv1351.bankjdbc.model.TeachingActivity;
 import se.kth.iv1351.bankjdbc.model.DTO.TADTO;
+import se.kth.iv1351.bankjdbc.model.DTO.TeacherAllocationDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 
 /**
@@ -141,18 +143,18 @@ public class TeachingActivityDAO {
     }
 
 
-    public List<Account> findTeacherAllocationPeriod(int year, int employeeId) throws TeachingActivityDBException {
+    public List<TeacherAllocationDTO> findTeacherAllocationPeriod(int year, int employeeId) throws TeachingActivityDBException {
         String failureMsg = "Could not search for teacher allocation pressure";
         ResultSet result = null;
-        List<Account> accounts = new ArrayList<>();
+        List<TeacherAllocationDTO> allocations = new ArrayList<>();
         try {
             findPAsForTeacherStmt.setInt(1, year);
-            findPAsForTeacherStmt.setInt(1, employeeId);
+            findPAsForTeacherStmt.setInt(2, employeeId);
             result = findPAsForTeacherStmt.executeQuery();
             while (result.next()) {
-                accounts.add(new Account(
-                    result.getInt("num_courses"),
-                    result.getString("period_name")));
+                allocations.add(new TeacherAllocation(
+                        result.getInt("num_courses"),
+                        result.getString("period_name")));
             }
             connection.commit();
         } catch (SQLException sqle) {
@@ -160,7 +162,29 @@ public class TeachingActivityDAO {
         } finally {
             closeResultSet(failureMsg, result);
         }
-        return accounts;
+        return allocations;
+    }
+
+    public int findMaxCoursesPerTeacher() throws TeachingActivityDBException {
+        String failureMsg = "Could not search max courses per teacher";
+        ResultSet result = null;
+        try {
+        result = findMaxCoursesPerTeacherStmt.executeQuery();
+
+        if (!result.next()) {
+            handleException(failureMsg + ": no row found in employment_constants", null);
+        }
+
+        return result.getInt(EC_C_COLUMN_NAME);
+        } catch (SQLException sqle) {
+        handleException(failureMsg, sqle);
+        return 0;
+
+        } finally {
+            if (result != null) {
+                closeResultSet(failureMsg, result);
+            }
+        }
     }
 
     /**
