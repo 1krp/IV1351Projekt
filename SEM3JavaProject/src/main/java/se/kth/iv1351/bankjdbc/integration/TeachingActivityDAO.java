@@ -29,6 +29,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 import se.kth.iv1351.bankjdbc.model.TeachingActivity;
 
@@ -37,6 +38,7 @@ import se.kth.iv1351.bankjdbc.model.DTO.TADTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.AdminExamHoursDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
+import se.kth.iv1351.bankjdbc.model.DTO.TeacherAllocationDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.AvgSalaryDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.CourseInstanceDTO;
 
@@ -82,6 +84,10 @@ public class TeachingActivityDAO {
     private PreparedStatement insertNewActivityStmt;
     private PreparedStatement displayTAStmt;
     private PreparedStatement deallocatePAStmt;
+    private PreparedStatement findPAsForTeacherStmt;
+    private PreparedStatement findPeriodForCoursinstanceStmt;
+    private PreparedStatement findMaxCoursesPerTeacherStmt;
+    private PreparedStatement createPlannedActivityStmt;
     
 
     /**
@@ -147,6 +153,85 @@ public class TeachingActivityDAO {
             if (updatedRows != 1) {
                 handleException(failureMsg, null);
             }
+            connection.commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
+
+    public ArrayList<TeacherAllocationDTO> findTeacherAllocationPeriod(String year, int employeeId) throws TeachingActivityDBException {
+        String failureMsg = "Could not search for teacher allocation pressure";
+
+        ArrayList<TeacherAllocationDTO> allocations = new ArrayList<>();
+        try {
+
+            findPAsForTeacherStmt.setString(1, year);
+            findPAsForTeacherStmt.setInt(2, employeeId);
+
+            ResultSet result = findPAsForTeacherStmt.executeQuery();
+            while (result.next()) {
+                TeacherAllocationDTO allocationDTO = new TeacherAllocationDTO(
+                    result.getInt("num_courses"),
+                    result.getString("period_name")
+                );
+
+                allocations.add(allocationDTO);
+            }
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        } 
+
+        return allocations;
+    }
+
+    public String findPeriodForCoursinstance(int courseInstanceId) throws TeachingActivityDBException {
+        String failureMsg = "Could not find period for given course instance";
+
+        try {
+            findPeriodForCoursinstanceStmt.setInt(1, courseInstanceId);
+
+            try (ResultSet result = findPeriodForCoursinstanceStmt.executeQuery()) {
+                if (result.next()) {
+                    return result.getString(1);
+                } else {
+                    throw new TeachingActivityDBException("No max courses value found"); 
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new TeachingActivityDBException(failureMsg, e);
+        }
+    }
+
+    public int findMaxCoursesPerTeacher() throws TeachingActivityDBException {
+        String failureMsg = "Could not search max courses per teacher";
+
+        try (ResultSet result = findMaxCoursesPerTeacherStmt.executeQuery()) {
+            if (result.next()) {
+                return result.getInt(1);
+            } else {
+                return 0; 
+            }
+        } catch (SQLException e) {
+            throw new TeachingActivityDBException(failureMsg, e);
+        }
+    }
+
+    public void createPlannedActivity(PlannedActivityDTO plannedDTO) throws TeachingActivityDBException {
+        String failureMsg = "Could not allocate activity";
+        int updatedRows = 0;
+        try {
+            createPlannedActivityStmt.setInt(1, plannedDTO.getEmpId());
+            createPlannedActivityStmt.setInt(2, plannedDTO.getCourseId());
+            createPlannedActivityStmt.setInt(3, plannedDTO.getPlannedHours());
+            createPlannedActivityStmt.setInt(4, plannedDTO.getAllocatedHours());
+            createPlannedActivityStmt.setInt(5, plannedDTO.getTActivity());
+
+            updatedRows = createPlannedActivityStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+
             connection.commit();
         } catch (SQLException sqle) {
             handleException(failureMsg, sqle);
@@ -247,6 +332,32 @@ public class TeachingActivityDAO {
 
         deallocatePAStmt = connection.prepareStatement("DELETE FROM " + PLANNED_ACTIVITY_TABLE_NAME 
                 + " WHERE " + PLANNED_ACTIVITY_PK_ID + "= ?");
+
+        findPAsForTeacherStmt = connection.prepareStatement(
+            "SELECT  \r\n" + //
+            "    COUNT(DISTINCT ci.id) AS num_courses,\r\n" + //
+            "    sp.period_name\r\n" + //
+            "FROM\r\n" + //
+            "    planned_activity pa \r\n" + //
+            "    JOIN course_instance ci ON pa.course_instance_id = ci.id AND ci.study_year = ?\r\n" + //
+            "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\r\n" + //
+            "    JOIN study_period sp ON cisp.study_period_id = sp.id\r\n" + //
+            "WHERE pa.employee_id = ? \n" + //
+            "GROUP BY sp.period_name"
+        );
+
+        findPeriodForCoursinstanceStmt = connection.prepareStatement(
+                "SELECT sp.period_name\r\n" + //
+                    "FROM course_instance ci\r\n" + //
+                    "JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\r\n" + //
+                    "JOIN study_period sp ON cisp.study_period_id = sp.id\r\n" + //
+                    "WHERE ci.id= ?");
+        
+        findMaxCoursesPerTeacherStmt = connection.prepareStatement("SELECT " + EC_C_COLUMN_NAME
+                + " FROM " + EC_C_TABLE_NAME + " WHERE " + EC_C_PK_COLUMN_NAME + "=1" );
+
+        createPlannedActivityStmt = connection.prepareStatement("INSERT INTO " + PLANNED_ACTIVITY_TABLE_NAME
+                + "(employee_id, course_instance_id, planned_hours, allocated_hours, activity_id) VALUES (?, ?, ?, ?, ?)");
     }
 
     /**
