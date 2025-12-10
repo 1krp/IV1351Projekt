@@ -47,6 +47,9 @@ public class TeachingActivityDAO {
     private static final String TEACHING_ACTIVITY_COLUMN_FACTOR = "factor";
     private static final String PLANNED_ACTIVITY_TABLE_NAME = "planned_activity";
     private static final String PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID = "activity_id";
+    private static final String PLANNED_ACTIVITY_COLUMN_CI_ID = "course_instance_id";
+    private static final String PLANNED_ACTIVITY_COLUMN_E_ID = "employee_id";
+    private static final String PLANNED_ACTIVITY_PK_COLUMN_NAME = "id";
     private static final String EC_C_TABLE_NAME = "employment_constants";
     private static final String EC_C_COLUMN_NAME = "max_courses";
     private static final String EC_C_PK_COLUMN_NAME = "id";
@@ -63,6 +66,7 @@ public class TeachingActivityDAO {
     private PreparedStatement createTAFactorStmt;
     private PreparedStatement createTAPAconnectionStmt;
     private PreparedStatement findTAStmt;
+    private PreparedStatement deallocatePAStmt;
     
 
     /**
@@ -119,6 +123,21 @@ public class TeachingActivityDAO {
         }
     }
 
+    public void deallocatePlannedActivity(int plannedActivityId) throws TeachingActivityDBException {
+        String failureMsg = "Could not deallocate the planned activity with id: " + plannedActivityId;
+        try{
+            deallocatePAStmt.setInt(1, plannedActivityId);
+
+            int updatedRows = deallocatePAStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+            connection.commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
+
     /**
      * Commits the current transaction.
      * 
@@ -134,7 +153,7 @@ public class TeachingActivityDAO {
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
         connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
-                "postgres", "cbmmlp");
+                "postgres", "asd123");
         connection.setAutoCommit(false);
     }
 
@@ -204,6 +223,9 @@ public class TeachingActivityDAO {
                 "    sp.period_name \n" + //
                 "ORDER BY course_instance;"
             );
+
+        deallocatePAStmt = connection.prepareStatement("DELETE FROM " + PLANNED_ACTIVITY_TABLE_NAME 
+                + " WHERE " + PLANNED_ACTIVITY_PK_COLUMN_NAME + "= ?");
     }
         
     /**

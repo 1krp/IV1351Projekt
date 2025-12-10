@@ -98,8 +98,8 @@ public class BlockingInterpreter {
                     case INSERT_PLANNED_ACTIVITY:
                         /* TO DO */
                         break;
-                    case DELETE_PLANNED_ACTIVITY:
-                        /* TO DO */
+                    case DEALLOCATE_PLANNED_ACTIVITY:
+                        ctrl.deallocatePlannedActivity(Integer.parseInt(cmdLine.getParameter(0)));
                         break;
                     case UPDATE_MAX_TEACHER_ALLOCATION:
                         ctrl.updateTeacherAllocationLimit(Integer.parseInt(cmdLine.getParameter(0)));

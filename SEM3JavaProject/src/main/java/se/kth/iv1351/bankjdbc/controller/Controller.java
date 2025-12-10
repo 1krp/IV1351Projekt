@@ -94,6 +94,21 @@ public class Controller {
             throw new RejectedException(failureMsg, e);
         }
     } 
+
+    public void deallocatePlannedActivity(int plannedActivityId) throws RejectedException {
+        String failureMsg = "Could not deallocate the planned activity with id: " + plannedActivityId;
+
+        if (plannedActivityId < 1) {
+            throw new RejectedException(failureMsg);
+        }
+
+        try {
+            TeachingActivityDb.deallocatePlannedActivity(plannedActivityId); 
+        } catch (Exception e) {
+            commitOngoingTransaction(failureMsg);
+            throw new RejectedException(failureMsg, e);
+        }
+    }
     
      
     private void commitOngoingTransaction(String failureMsg) throws RejectedException {
