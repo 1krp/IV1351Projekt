@@ -31,6 +31,7 @@ import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.model.RejectedException;
 import se.kth.iv1351.bankjdbc.model.TeacherAllocationLimit;
+import se.kth.iv1351.bankjdbc.model.TeacherAllocation;
 import se.kth.iv1351.bankjdbc.model.DTO.TeacherAllocationDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
@@ -150,9 +151,32 @@ public class Controller {
        }
 
        try{
-        double factor = 1;
-        PlannedActivityDTO plannedDTO = new PlannedActivityDTO(0, employeeId, courseInstanceId, plannedHours, allocatedHours, activityID, factor);
-       }
+                    int maxCoursesPerPeriod = TeachingActivityDb.findMaxCoursesPerTeacher();
+            String periodName = TeachingActivityDb.findPeriodForCourseInstance(courseInstanceId);
+            List<TeacherAllocationDTO> allocations = TeachingActivityDb.findTeacherAllocationPeriod(year, employeeId);
+
+            int coursesInPeriod = 0;
+            for (TeacherAllocationDTO allocation : allocations) {
+                if (allocation.getPeriod().equals(periodName)) {
+                    coursesInPeriod = allocation.getNumCourses();
+                    break;
+                }
+            }
+
+            int projectedCourses = coursesInPeriod + 1;
+            if (TeacherAllocationLimit.exceedsLimit(new TeacherAllocation(projectedCourses, periodName), maxCoursesPerPeriod)) {
+                throw new RejectedException("Teacher already allocated to maximum number of course instances in " + periodName);
+            }
+
+            double factor = 1;
+            PlannedActivityDTO plannedDTO = new PlannedActivityDTO(0, employeeId, courseInstanceId, plannedHours, allocatedHours, activityID, factor);
+            TeachingActivityDb.createPlannedActivity(plannedDTO);
+        } catch (TeachingActivityDBException tadbe) {
+            throw new RejectedException(failureMsg, tadbe);
+        } catch (Exception e) {
+            commitOngoingTransaction(failureMsg);
+            throw new RejectedException(failureMsg, e);
+        }
     }
 
     private void commitOngoingTransaction(String failureMsg) throws RejectedException {

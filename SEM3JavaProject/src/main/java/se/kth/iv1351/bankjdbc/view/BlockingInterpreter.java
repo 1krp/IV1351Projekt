@@ -96,10 +96,19 @@ public class BlockingInterpreter {
                                                                 Integer.parseInt(cmdLine.getParameter(1)));
                         break;
                     case ALLOCATE_PLANNED_ACTIVITY:
-                        ctr.allocatePlannedActivity(/* e_id, ciid, p_hours, a_id, a_hours*, year*/)
+                        ctrl.allocatePlannedActivity(
+                            Integer.parseInt(cmdLine.getParameter(0)),
+                            Integer.parseInt(cmdLine.getParameter(1)),
+                            Integer.parseInt(cmdLine.getParameter(2)),
+                            Integer.parseInt(cmdLine.getParameter(3)),
+                            Integer.parseInt(cmdLine.getParameter(4)),
+                            Integer.parseInt(cmdLine.getParameter(5))
+                        );
+                        System.out.println("Teaching activity allocated.");
                         break;
                     case DEALLOCATE_PLANNED_ACTIVITY:
                         ctrl.deallocatePlannedActivity(Integer.parseInt(cmdLine.getParameter(0)));
+                        System.out.println("Planned activity deallocated.");
                         break;
                     case UPDATE_MAX_TEACHER_ALLOCATION:
                         ctrl.updateTeacherAllocationLimit(Integer.parseInt(cmdLine.getParameter(0)));

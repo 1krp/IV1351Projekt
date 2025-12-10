@@ -59,6 +59,9 @@ public class TeachingActivityDAO {
     private static final String CI_TABLE_NAME = "course_instance";
     private static final String CI_COLUMN_NAME = "num_students";
     private static final String CI_PK_COLUMN_NAME = "id";
+    private static final String CISP_TABLE_NAME = "course_instance_study_period";
+    private static final String SP_TABLE_NAME = "study_period";
+    private static final String SP_COLUMN_PERIOD_NAME = "period_name";
 
     private Connection connection;
 
@@ -73,6 +76,7 @@ public class TeachingActivityDAO {
     private PreparedStatement findPAsForTeacherStmt;
     private PreparedStatement findMaxCoursesPerTeacherStmt;
     private PreparedStatement createPlannedActivityStmt;
+    private PreparedStatement findPeriodForCourseInstanceStmt;
     
 
     /**
@@ -166,6 +170,27 @@ public class TeachingActivityDAO {
         }
         return allocations;
     }
+
+    public String findPeriodForCourseInstance(int courseInstanceId) throws TeachingActivityDBException {
+        String failureMsg = "Could not find study period for course instance: " + courseInstanceId;
+        ResultSet result = null;
+        try {
+            findPeriodForCourseInstanceStmt.setInt(1, courseInstanceId);
+            result = findPeriodForCourseInstanceStmt.executeQuery();
+            if (result.next()) {
+                String period = result.getString(SP_COLUMN_PERIOD_NAME);
+                connection.commit();
+                return period;
+            }
+            handleException(failureMsg, null);
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        } finally {
+            closeResultSet(failureMsg, result);
+        }
+        return null;
+    }
+
 
     public int findMaxCoursesPerTeacher() throws TeachingActivityDBException {
         String failureMsg = "Could not search max courses per teacher";
@@ -310,11 +335,15 @@ public class TeachingActivityDAO {
         );
 
         
-        findMaxCoursesPerTeacherStmt = connection.prepareStatement("SELECT " + EC_C_COLUMN_NAME 
+        findMaxCoursesPerTeacherStmt = connection.prepareStatement("SELECT " + EC_C_COLUMN_NAME
                 + " FROM " + EC_C_TABLE_NAME + " WHERE " + EC_C_PK_COLUMN_NAME + "=1" );
-        
-        createPlannedActivityStmt = connection.prepareStatement("INSERT INTO " + PLANNED_ACTIVITY_TABLE_NAME 
+
+        createPlannedActivityStmt = connection.prepareStatement("INSERT INTO " + PLANNED_ACTIVITY_TABLE_NAME
                 + "(employee_id, course_instance_id, planned_hours, allocated_hours, activity_id) VALUES (?, ?, ?, ?, ?)");
+
+        findPeriodForCourseInstanceStmt = connection.prepareStatement("SELECT " + SP_COLUMN_PERIOD_NAME
+                + " FROM " + CISP_TABLE_NAME + " cisp JOIN " + SP_TABLE_NAME
+                + " sp ON cisp.study_period_id = sp.id WHERE cisp." + PLANNED_ACTIVITY_COLUMN_CI_ID + " = ?");
     }
 
     /**
