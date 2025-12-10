@@ -150,8 +150,8 @@ public class TeachingActivityDAO {
     }
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
-        connection = DriverManager.getConnection("",
-                "", "");
+        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
+                "postgres", "cbmmlp");
         connection.setAutoCommit(false);
     }
 
@@ -213,6 +213,7 @@ public class TeachingActivityDAO {
             "SELECT e.id, AVG(es.salary_per_hour) average_salary \n" + //
             "FROM employee e JOIN employee_salary es ON e.id = es.employee_id \n" + //
             "WHERE e.id = ? \n" + //
+            "FOR UPDATE \n" + //
             "GROUP BY e.id");
 
         showTeachingCostsStmt = connection.prepareStatement(

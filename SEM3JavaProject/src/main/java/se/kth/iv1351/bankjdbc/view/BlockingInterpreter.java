@@ -89,7 +89,7 @@ public class BlockingInterpreter {
                             System.out.println(
                                 "\n" +
                                 "Course Code: " + costDTO.getCourseCode() + "\n" +
-                                "Instance ID: " + costDTO.getCourseInstance() + "\n" +
+                                "Course Instance ID: " + costDTO.getCourseInstance() + "\n" +
                                 "Study Period: " +costDTO.getStudyPeriod() + "\n" +
                                 "Planned cost: " + costDTO.getPlannedCost() + "\n" +
                                 "Actual cost: " + costDTO.getActualCost() + "\n" +

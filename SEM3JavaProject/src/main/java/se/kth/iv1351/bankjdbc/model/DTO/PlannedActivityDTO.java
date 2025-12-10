@@ -8,10 +8,10 @@ public class PlannedActivityDTO {
     private final int planned_hours;
     private final int allocated_hours;
     private final int tActivity_id;
-    private final int factor;
+    private final double factor;
 
     public PlannedActivityDTO(int id, int employee_id, int course_instance_id, int planned_hours, 
-        int allocated_hours, int tActivity_id, int factor){
+        int allocated_hours, int tActivity_id, double factor){
         
         this.id = id;
         this.employee_id = employee_id;
@@ -28,5 +28,5 @@ public class PlannedActivityDTO {
     public int getPlannedHours(){return this.planned_hours;}
     public int getAllocatedHours(){return this.allocated_hours;}
     public int getTActivity(){return this.tActivity_id;}
-    public int getFactor(){return this.factor;}
+    public double getFactor(){return this.factor;}
 }
