@@ -79,7 +79,7 @@ public class BlockingInterpreter {
                         keepReceivingCmds = false;
                         break;
                     case COST:
-                        TeachingCostDTO costDTO = ctrl.fetchTeachingCostsForCourses(
+                        TeachingCostDTO costDTO = ctrl.fetchTeachingCostsForCourse(
                             Integer.parseInt(cmdLine.getParameter(0)));
 
                         System.out.println(
