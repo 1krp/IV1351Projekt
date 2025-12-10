@@ -55,10 +55,7 @@ public class Controller {
     }
 
     public ArrayList<TeachingCostDTO> fetchTeachingCostsForCourse(int cid, String year){
-
-        ArrayList<TeachingCostDTO> courseTeachingCosts = new ArrayList<>();
-        courseTeachingCosts = tcCalculator.calculateTeachingCostsForCourse(cid, year);
-        return courseTeachingCosts;
+        return tcCalculator.calculateTeachingCostsForCourse(cid, year);
     }
 
     public void updateTeacherAllocationLimit(int newLimit) throws RejectedException {
