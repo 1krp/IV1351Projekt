@@ -278,7 +278,7 @@ public class TeachingActivityDAO {
     public void showTAs(String activityName) throws TeachingActivityDBException{
         String failureMsg = "Error";
         try{
-            displayTAStmt.setString(0, activityName);
+            displayTAStmt.setString(1, activityName);
             connection.commit();
         }catch (SQLException sqle) {
             handleException(failureMsg, sqle);
