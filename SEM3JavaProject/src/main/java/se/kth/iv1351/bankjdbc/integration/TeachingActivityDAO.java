@@ -26,22 +26,17 @@ package se.kth.iv1351.bankjdbc.integration;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 import se.kth.iv1351.bankjdbc.model.DTO.*;
-import se.kth.iv1351.bankjdbc.model.TeachingActivity;
 
 import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.TADTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.AdminExamHoursDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeacherAllocationDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.AvgSalaryDTO;
+import se.kth.iv1351.bankjdbc.model.DTO.SalaryDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.CourseInstanceDTO;
 
 /**
@@ -73,7 +68,6 @@ public class TeachingActivityDAO {
 
     private Connection connection;
 
-    private PreparedStatement computeTeachingCostStmt;
     private PreparedStatement updateTeacherAllocationLimitStmt;
     private PreparedStatement updateNumStudendsInCIStmt;
     private PreparedStatement createTAStmt;
