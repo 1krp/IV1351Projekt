@@ -24,7 +24,6 @@
 
 package se.kth.iv1351.bankjdbc.view;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Scanner;
 
