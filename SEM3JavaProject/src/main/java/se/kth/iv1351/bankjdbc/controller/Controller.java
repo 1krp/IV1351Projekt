@@ -57,6 +57,14 @@ public class Controller {
         tAllocatePA = new TeacherAllocatePA(TeachingActivityDb);
     }
 
+    /**
+     * Task A1 - Fetches the teaching costs for a given course and year
+     * Communicates with database through the model layer
+     * 
+     * @param cid   course instance id of course to calculate teaching costs for
+     * @param year  studdy year to calculate teaching costs for
+     * @return      a list with the teaching costs for a course for each study period of a given year
+     */
     public ArrayList<TeachingCostDTO> fetchTeachingCostsForCourse(int cid, String year){
         return tcCalculator.calculateTeachingCostsForCourse(cid, year);
     }

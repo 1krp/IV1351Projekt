@@ -272,7 +272,7 @@ public class TeachingActivityDAO {
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
         connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
-                "postgres", "asd123");
+                "postgres", "cbmmlp");
         connection.setAutoCommit(false);
     }
 
@@ -378,20 +378,23 @@ public class TeachingActivityDAO {
     }
         
     /**
-     * Task A1
+     * For task A1 - fetches a row that includes the following course intance data:
+     * course instance id, number of students, study year, hp points, course code
      * 
      * @param cid course_instance_id
-     * @return TeachingCostDTO that contains wanted output row if execution is successful, else null
-     * @throws SQLException if query can not be executed
+     * @param year study year
+     * @return CourseInstanceDTO if execution is successful, else null
+     * @throws TeachingActivityDBException
      */
-
-    public CourseInstanceDTO fetchCourseInstance(int cid, String year) throws TeachingActivityDBException {
+    public CourseInstanceDTO fetchCourseInstance(int cid, String year) 
+        throws TeachingActivityDBException {
             
         CourseInstanceDTO courseInst = null;
         
         try {
-            computeTeachingCostStmt.setInt(1, cid);
-            ResultSet rs = computeTeachingCostStmt.executeQuery();
+            fetchCourseInstanceStmt.setInt(1, cid);
+            fetchCourseInstanceStmt.setString(2, year);
+            ResultSet rs = fetchCourseInstanceStmt.executeQuery();
         
             while (rs.next()){
                 courseInst = new CourseInstanceDTO(
@@ -410,7 +413,17 @@ public class TeachingActivityDAO {
         return courseInst;
     }
 
-    public ArrayList<PlannedActivityDTO> fetchPlannedActivities(int courseId) throws TeachingActivityDBException {
+    /**
+     * For task A1 - fetches a row that includes the following planned activity data:
+     * planned activity id, employee id, course instance id, planned hours, allocated hours,
+     * activity id and multiplication factor.
+     * 
+     * @param courseId course_instance_id
+     * @return A list with PlannedActivityDTO if execution is successful, else null
+     * @throws TeachingActivityDBException
+     */
+    public ArrayList<PlannedActivityDTO> fetchPlannedActivities(int courseId) 
+        throws TeachingActivityDBException {
             
         ArrayList<PlannedActivityDTO> allPlannedActivities = new ArrayList<>();
         
@@ -439,12 +452,20 @@ public class TeachingActivityDAO {
         return allPlannedActivities;
     }
 
-    public AdminExamHoursDTO fetchAdminExamHoursForCourse(int cid) throws TeachingActivityDBException {
+    /**
+     * For task A1 - fetches admin and exam hours per employee for a course
+     * 
+     * @param courseId course_instance_id
+     * @return AdminExamHoursDTODTO if execution is successful, else null
+     * @throws TeachingActivityDBException
+     */
+    public AdminExamHoursDTO fetchAdminExamHoursForCourse(int courseId) 
+        throws TeachingActivityDBException {
             
         AdminExamHoursDTO adminExamHours = null;
         
         try {
-            fetchAdminExamHoursForCourseStmt.setInt(1, cid);
+            fetchAdminExamHoursForCourseStmt.setInt(1, courseId);
             ResultSet rs = fetchAdminExamHoursForCourseStmt.executeQuery();
         
             while (rs.next()){
@@ -462,12 +483,21 @@ public class TeachingActivityDAO {
         return adminExamHours;
     }
 
-    public ArrayList<SalaryDTO> fetchSalaryEmployee(int eid) throws TeachingActivityDBException {
+    /**
+     * For task A1 - fetches all registered salary per hour for an employee.
+     * Used to calculate the mean salary for an employee.
+     * 
+     * @param empId employee_id
+     * @return A list with SalaryDTO if execution is successful, else null
+     * @throws TeachingActivityDBException
+     */
+    public ArrayList<SalaryDTO> fetchSalaryEmployee(int empId) 
+        throws TeachingActivityDBException {
             
         ArrayList<SalaryDTO> salaries = new ArrayList<>();
         
         try {
-            fetchSalaryEmployeeStmt.setInt(1, eid);
+            fetchSalaryEmployeeStmt.setInt(1, empId);
             ResultSet rs = fetchSalaryEmployeeStmt.executeQuery();
         
             while (rs.next()){
@@ -486,7 +516,17 @@ public class TeachingActivityDAO {
         return salaries;
     }
 
-    public ArrayList<TeachingCostDTO> showTeachingCostsForCourse(double plannedCost, double actCost, int courseId) 
+    /**
+     * For task A1 - fetches rows with desired outout data:
+     * Course code, course instance id, study period, planned cost, actual cost.
+     * 
+     * @param plannedCost Calculated planned cost
+     * @param actCost Calculated actual cost
+     * @param courseId Course instance id
+     * @return A list with TeachingCostDTO for all study periods the course is planned for
+     * @throws TeachingActivityDBException
+     */
+    public ArrayList<TeachingCostDTO> createTeachingCostsForCourseView(double plannedCost, double actCost, int courseId) 
         throws TeachingActivityDBException {
             
         ArrayList<TeachingCostDTO> allTeachingCosts = new ArrayList<>();
@@ -505,8 +545,9 @@ public class TeachingActivityDAO {
                     rs.getDouble("planned_cost"),
                     rs.getDouble("actual_cost")
                 );
-            }
-                    
+
+                allTeachingCosts.add(teachingCosts);
+            }        
         } catch (SQLException se){
             String erMsg = "Error when trying to fetch rows for teaching costs.";
             handleException(erMsg, se);

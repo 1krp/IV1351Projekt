@@ -18,6 +18,15 @@ public class TeachingCostCalculator {
         this.dao = dao;
     }
 
+    /**
+     * Task A1 - Calculate teaching costs for a given course and year
+     * Communicates directly with database
+     * Transaction is commited after last query
+     * 
+     * @param courseId  course_instance_id for calculated course
+     * @param year      study year to calculate for
+     * @return          a list with the teaching costs for a course for each study period of a given year, or null
+     */
     public ArrayList<TeachingCostDTO> calculateTeachingCostsForCourse(int courseId, String year){
 
         double plannedCost = 0;
@@ -39,7 +48,8 @@ public class TeachingCostCalculator {
                     * avgSalary;
             }
 
-            ArrayList<TeachingCostDTO> result = dao.showTeachingCostsForCourse(plannedCost, actualCost, courseInstance.getId());
+            ArrayList<TeachingCostDTO> result = dao.createTeachingCostsForCourseView(
+                    plannedCost, actualCost, courseInstance.getId());
 
             dao.commit();
 
