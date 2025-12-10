@@ -67,6 +67,7 @@ public class TeachingActivityDAO {
     private PreparedStatement createTAPAconnectionStmt;
     private PreparedStatement findTAStmt;
     private PreparedStatement deallocatePAStmt;
+    private PreparedStatement findPAsForTeacherStmt;
     
 
     /**
@@ -226,8 +227,19 @@ public class TeachingActivityDAO {
 
         deallocatePAStmt = connection.prepareStatement("DELETE FROM " + PLANNED_ACTIVITY_TABLE_NAME 
                 + " WHERE " + PLANNED_ACTIVITY_PK_COLUMN_NAME + "= ?");
-    }
         
+        findPAsForTeacherStmt = connection.prepareStatement(
+            "SELECT  \n" + //
+            "    COUNT(DISTINCT ci.id) AS num_courses\n" + //
+            "FROM\n" + //
+            "    planned_activity pa \n" + //
+            "    JOIN course_instance ci ON pa.course_instance_id = ci.id AND ci.study_year = ? \n" + //
+            "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\n" + //
+            "    JOIN study_period sp ON cisp.study_period_id = sp.id \n" + //
+            "WHERE pa.employee_id = ?"
+        );
+    }
+
     /**
      * Task A1
      * 
