@@ -38,6 +38,8 @@ public class TeachingCostCalculator {
                     * empSalary;
             }
 
+            dao.commit();
+
             return dao.showTeachingCostsForCourse(plannedCost, actualCost, courseInstance.getId());
         } catch (TeachingActivityDBException tae) {
             System.out.println("Error when calculating teaching costs: " + tae.getMessage());

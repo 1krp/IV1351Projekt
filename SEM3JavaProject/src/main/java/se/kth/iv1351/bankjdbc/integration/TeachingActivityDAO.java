@@ -330,8 +330,6 @@ public class TeachingActivityDAO {
                 );
             }
 
-            commit();
-
         } catch (SQLException se){
             String erMsg = "Error when trying to fetch avg employee salary";
             handleException(erMsg, se);
