@@ -1,4 +1,4 @@
-package se.kth.iv1351.bankjdbc.DTO;
+package se.kth.iv1351.bankjdbc.model.DTO;
 
 public class TeachingCostDTO {
     private String course_code;

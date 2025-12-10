@@ -27,11 +27,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import se.kth.iv1351.bankjdbc.DTO.TeachingCostDTO;
-import se.kth.iv1351.bankjdbc.model.TeachingActivity;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
 import se.kth.iv1351.bankjdbc.model.RejectedException;
+import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 
 /**
  * This is the application's only controller, all calls to the model pass here.
@@ -51,6 +50,17 @@ public class Controller {
         TeachingActivityDb = new TeachingActivityDAO();
     }
 
+    public TeachingCostDTO fetchTeachingCostsForCourse(int cid){
+
+        TeachingCostDTO courseTeachingCosts = null;
+        try {
+            courseTeachingCosts = TeachingActivityDb.calculateTeachingCosts(cid);
+        } catch (SQLException se) {
+            System.out.println(se);
+        }
+        return courseTeachingCosts;
+    }
+
     public void updateTeacherAllocationLimit(int newLimit) throws RejectedException {
         String failureMsg = "Could not update teacher allocation limit to: " + newLimit 
                 + ". Limit must be zero or higher.";
@@ -64,27 +74,11 @@ public class Controller {
         } catch (TeachingActivityDBException tadbe) {
             throw new RejectedException(failureMsg, tadbe);
         } catch (Exception e) {
-            commitOngoingTransaction(failureMsg);
             throw new RejectedException(failureMsg, e);
         }
     }
 
-    public TeachingCostDTO fetchTeachingCostsForCourses(int cid){
 
-        TeachingCostDTO courseTeachingCosts = null;
-        try {
-            ArrayList<TeachingCostDTO> teachingCostsPlannedCourses = TeachingActivityDb.calculateTeachingCosts();
-
-            for (TeachingCostDTO dto : teachingCostsPlannedCourses) {
-                if (dto.getCourseInstance() == cid) {
-                    courseTeachingCosts = dto;
-                }
-            }
-        } catch (SQLException se) {
-            System.out.println(se);
-        }
-        return courseTeachingCosts;
-    }
     public void insertNewActivityWithAssociations(String activityName, double factor, int employee_id, int course_instance_id, int planned_hours, int allocated_hours) throws RejectedException{
         String failureMsg = "Could not insert "+ activityName +" into planned activity";
         try{

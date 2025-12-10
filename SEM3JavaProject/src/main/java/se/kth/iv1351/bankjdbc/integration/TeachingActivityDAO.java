@@ -32,9 +32,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.kth.iv1351.bankjdbc.model.TeachingActivity;
-import se.kth.iv1351.bankjdbc.DTO.TeachingCostDTO;
-import se.kth.iv1351.bankjdbc.model.TADTO;
+
 import se.kth.iv1351.bankjdbc.model.PlannedActivityDTO;
+import se.kth.iv1351.bankjdbc.model.DTO.TADTO;
+import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 
 /**
  * This data access object (DAO) encapsulates all database calls in the bank
@@ -61,17 +62,18 @@ public class TeachingActivityDAO {
     private static final String PLANNED_ACTIVITY_COLUMN_PLANNED_HOURS = "planned_hours";
     private static final String PLANNED_ACTIVITY_COLUMN_ALLOCATED_HOURS = "allocated_hours"; 
     private Connection connection;
+
+    private PreparedStatement computeTeachingCostStmt;
     private PreparedStatement updateTeacherAllocationLimitStmt;
     private PreparedStatement updateNumStudendsInCIStmt;
     private PreparedStatement createTAStmt;
     private PreparedStatement createTAFactorStmt;
-    private PreparedStatement createTAPAconnectionStmt;
     private PreparedStatement findTAStmt;
-    private PreparedStatement computeTeachingCostStmt;
     private PreparedStatement insertNewActivityStmt;
+    
 
     /**
-     * Constructs a new DAO object connected to the bank database.
+     * Constructs a new DAO object connected to the database.
      */
     public TeachingActivityDAO() throws TeachingActivityDBException {
         try {
@@ -81,6 +83,8 @@ public class TeachingActivityDAO {
             throw new TeachingActivityDBException("Could not connect to datasource.", exception);
         }
     }
+
+
 
     /**
      * Updates the max_courses limit in the employment_constants table
@@ -122,10 +126,6 @@ public class TeachingActivityDAO {
         }
     }
 
-
-
-
-
     /**
      * Commits the current transaction.
      * 
@@ -140,11 +140,16 @@ public class TeachingActivityDAO {
     }
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
-        connection = DriverManager.getConnection(" ",
-                " ", " ");
+        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
+                "postgres", "cbmmlp");
         connection.setAutoCommit(false);
     }
 
+    /**
+     * Prepared statements 
+     * 
+     * @throws SQLException If unable to excecute SQL-statement
+     */
     private void prepareStatements() throws SQLException {
         updateTeacherAllocationLimitStmt = connection.prepareStatement("UPDATE " + EC_C_TABLE_NAME 
                 + " SET " + EC_C_COLUMN_NAME + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
@@ -155,8 +160,6 @@ public class TeachingActivityDAO {
         createTAFactorStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME 
                 + "(" + TEACHING_ACTIVITY_COLUMN_FACTOR + ") VALUES (?)");
 
-        createTAPAconnectionStmt = connection.prepareStatement("INSERT INTO " + PLANNED_ACTIVITY_TABLE_NAME + 
-        "(" + PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID + ") VALUES ("+ TEACHING_ACTIVITY_PK_COLUMN_NAME +") WHERE "+ PLANNED_ACTIVITY_PK_ID +" = ?");
         
         findTAStmt = connection.prepareStatement("SELECT " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME
                 + " FROM " + TEACHING_ACTIVITY_TABLE_NAME + " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " = ?"); //Om TA redan finns
@@ -172,17 +175,28 @@ public class TeachingActivityDAO {
         computeTeachingCostStmt = connection.prepareStatement(
                 "SELECT\n" + //
                 "    cl.course_code,\n" + //
-                "    ci.id AS course_instance,\n" + //
+                "    ci." + CI_PK_COLUMN_NAME  + " AS course_instance,\n" + //
                 "    sp.period_name AS study_period,\n" + //
-                "    SUM(eJs.avgS * pa.planned_hours) AS planned_cost,\n" + //
-                "    SUM(eJs.avgS * pa.allocated_hours) AS actual_cost \n" + //
+                "    SUM(\n" + //
+                "        eJs.avgS * pa.planned_hours + \n" + //
+                "        eJs.avgS * aaeh.admin_hours_per_employee +\n" + //
+                "        eJs.avgS * aaeh.exam_hours_per_employee\n" + //
+                "        ) planned_cost,\n" + //
+                "    SUM(\n" + //
+                "        eJS.avgS * pa.allocated_hours + \n" + //
+                "        eJs.avgS * aaeh.admin_hours_per_employee +\n" + //
+                "        eJs.avgS * aaeh.exam_hours_per_employee\n" + //
+                "        ) actual_cost \n" + //
                 "FROM\n" + //
-                "    planned_activity pa \n" + //
-                "    JOIN course_instance ci ON pa.course_instance_id = ci.id AND ci.study_year = '2025'\n" + //
+                     PLANNED_ACTIVITY_TABLE_NAME + " pa \n" + //
+                "    JOIN " + CI_TABLE_NAME + " ci ON pa.course_instance_id = ci." + CI_PK_COLUMN_NAME 
+                        + " AND ci." + CI_PK_COLUMN_NAME + " = ? AND ci.study_year = '2025'\n" + //
                 "    JOIN course_version cv ON ci.course_version_id = cv.id\n" + //
                 "    JOIN course_layout cl ON cv.course_layout_id = cl.id\n" + //
                 "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\n" + //
                 "    JOIN study_period sp ON cisp.study_period_id = sp.id\n" + //
+                "    JOIN admin_and_exam_hours_per_employee_and_course aaeh ON ci." + CI_PK_COLUMN_NAME 
+                        + " = aaeh.ciid\n" + //
                 "    JOIN (\n" + //
                 "        SELECT\n" + //
                 "            e.id,\n" + //
@@ -196,35 +210,41 @@ public class TeachingActivityDAO {
                 "    ) eJs ON eJs.id = pa.employee_id \n" + //
                 "GROUP BY\n" + //
                 "    cl.course_code,\n" + //
-                "    ci.id,\n" + //
+                "    ci." + CI_PK_COLUMN_NAME  + ",\n" + //
                 "    sp.period_name \n" + //
                 "ORDER BY course_instance;"
             );
     }
         
-    public ArrayList<TeachingCostDTO> calculateTeachingCosts() throws SQLException {
+    /**
+     * Task A1
+     * 
+     * @param cid course_instance_id
+     * @return TeachingCostDTO that contains wanted output row if execution is successful, else null
+     * @throws SQLException if query can not be executed
+     */
+    public TeachingCostDTO calculateTeachingCosts(int cid) throws SQLException {
             
-        ArrayList<TeachingCostDTO> calculatedTeachingCosts = new ArrayList<>();
+        TeachingCostDTO teachingCosts = null;
         
         try {
+            computeTeachingCostStmt.setInt(1, cid);
             ResultSet rs = computeTeachingCostStmt.executeQuery();
         
             while (rs.next()){
-                TeachingCostDTO cost = new TeachingCostDTO(
+                teachingCosts = new TeachingCostDTO(
                     rs.getString("course_code"), 
                     rs.getInt("course_instance"), 
                     rs.getString("study_period"),
                     rs.getDouble("planned_cost"),
                     rs.getDouble("actual_cost")
                 );
-        
-                calculatedTeachingCosts.add(cost);
             }
                     
         } catch (SQLException se){
             System.out.println(se);
         }
-        return calculatedTeachingCosts;
+        return teachingCosts;
     }
 
 

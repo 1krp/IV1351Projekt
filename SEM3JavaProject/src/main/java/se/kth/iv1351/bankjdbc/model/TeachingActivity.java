@@ -1,5 +1,7 @@
 package se.kth.iv1351.bankjdbc.model;
 
+import se.kth.iv1351.bankjdbc.model.DTO.TADTO;
+
 public class TeachingActivity implements TADTO {
     private String TAName;
     private double factor;

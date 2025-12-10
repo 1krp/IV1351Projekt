@@ -1,4 +1,4 @@
-package se.kth.iv1351.bankjdbc.model;
+package se.kth.iv1351.bankjdbc.model.DTO;
 
 /**
  * Specifies a read-only view of a teaching activity.
