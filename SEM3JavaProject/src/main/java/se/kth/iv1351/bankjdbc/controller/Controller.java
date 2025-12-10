@@ -91,7 +91,17 @@ public class Controller {
             throw new RejectedException(failureMsg, e);
         }
     }
-
+    public void showTeachingActivity(String activityName) throws RejectedException{
+        String failureMsg = "Could not show "+ activityName +" in planned activity";
+        try{
+            TeachingActivityDb.showTAs(activityName);
+        }catch(TeachingActivityDBException tadbe){
+            throw new RejectedException(failureMsg, tadbe);
+        }catch (Exception e) {
+            commitOngoingTransaction(failureMsg);
+            throw new RejectedException(failureMsg, e);
+        }
+    }
     public void modifyNumStudendsInCourseInstance(int courseInstanceId, int numStudents) throws RejectedException {
         String failureMsg = "Could not update num_students to " + numStudents;
         

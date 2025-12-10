@@ -53,6 +53,10 @@ public enum Command {
      */
     ADD_NEW_TEACHING_ACTIVITY,
     /**
+     * Shows all rows of a given teaching activity in planned activity table
+     */
+    SHOW_TEACHING_ACTIVITY,
+    /**
      * Lists all commands.
      */
     HELP,

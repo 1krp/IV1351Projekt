@@ -47,6 +47,10 @@ public class TeachingActivityDAO {
     private static final String TEACHING_ACTIVITY_PK_COLUMN_NAME = "id";
     private static final String TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME = "activity_name";
     private static final String TEACHING_ACTIVITY_COLUMN_FACTOR = "factor";
+
+    private static final String PLANNED_ACTIVITY_PK_ID = "id";
+    private static final String PLANNED_ACTIVITY_COLUMN_PLANNED_HOURS = "planned_hours";
+    private static final String PLANNED_ACTIVITY_COLUMN_ALLOCATED_HOURS = "allocated_hours"; 
     private static final String PLANNED_ACTIVITY_TABLE_NAME = "planned_activity";
     private static final String PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID = "activity_id";
     private static final String PLANNED_ACTIVITY_COLUMN_EMPLOYEE_ID = "employee_id";
@@ -58,9 +62,7 @@ public class TeachingActivityDAO {
     private static final String CI_TABLE_NAME = "course_instance";
     private static final String CI_COLUMN_NAME = "num_students";
     private static final String CI_PK_COLUMN_NAME = "id";
-    private static final String PLANNED_ACTIVITY_PK_ID = "id";
-    private static final String PLANNED_ACTIVITY_COLUMN_PLANNED_HOURS = "planned_hours";
-    private static final String PLANNED_ACTIVITY_COLUMN_ALLOCATED_HOURS = "allocated_hours"; 
+
     private Connection connection;
 
     private PreparedStatement computeTeachingCostStmt;
@@ -70,6 +72,7 @@ public class TeachingActivityDAO {
     private PreparedStatement createTAFactorStmt;
     private PreparedStatement findTAStmt;
     private PreparedStatement insertNewActivityStmt;
+    private PreparedStatement displayTAStmt;
     
 
     /**
@@ -140,8 +143,8 @@ public class TeachingActivityDAO {
     }
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
-        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
-                "postgres", "cbmmlp");
+        connection = DriverManager.getConnection("",
+                "", "");
         connection.setAutoCommit(false);
     }
 
@@ -172,6 +175,10 @@ public class TeachingActivityDAO {
         updateNumStudendsInCIStmt = connection.prepareStatement("UPDATE " + CI_TABLE_NAME 
                 + " SET " + CI_COLUMN_NAME + " = ? WHERE " + CI_PK_COLUMN_NAME + " = ?");
                 
+        displayTAStmt = connection.prepareStatement("SELECT planned_activity.employee_id, planned_activity.course_instance_id, planned_activity.planned_hours, planned_activity.allocated_hours, teaching_activity.activity_name\r\n" + //
+                        "FROM planned_activity\r\n" + //
+                        "INNER JOIN teaching_activity ON planned_activity.activity_id = teaching_activity.id WHERE teaching_activity.activity_name = ?");
+
         computeTeachingCostStmt = connection.prepareStatement(
                 "SELECT\n" + //
                 "    cl.course_code,\n" + //
@@ -267,6 +274,15 @@ public class TeachingActivityDAO {
         } catch (SQLException sqle) {
             handleException(failureMsg, sqle);
         }    
+    }
+    public void showTAs(String activityName) throws TeachingActivityDBException{
+        String failureMsg = "Error";
+        try{
+            displayTAStmt.setString(0, activityName);
+            connection.commit();
+        }catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
     }
 
     private int createTeachingActivity(String activityName, double factor) throws TeachingActivityDBException {

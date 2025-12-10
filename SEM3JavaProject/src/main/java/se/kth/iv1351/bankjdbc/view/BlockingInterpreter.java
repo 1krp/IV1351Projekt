@@ -112,6 +112,8 @@ public class BlockingInterpreter {
                                                                 Integer.parseInt(cmdLine.getParameter(4)),
                                                                 Integer.parseInt(cmdLine.getParameter(5)));
                         break;
+                    case SHOW_TEACHING_ACTIVITY:
+                        ctrl.showTeachingActivity(cmdLine.getParameter(0));
                     default:
                         System.out.println("illegal command");
                 }
