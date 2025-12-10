@@ -29,14 +29,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 import se.kth.iv1351.bankjdbc.model.TeachingActivity;
 import se.kth.iv1351.bankjdbc.model.DTO.TADTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.AdminExamHoursDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.StudyPeriodDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.AvgSalaryDTO;
 import se.kth.iv1351.bankjdbc.model.DTO.CourseInstanceDTO;
 
@@ -64,9 +62,6 @@ public class TeachingActivityDAO {
     private PreparedStatement fetchCourseInstanceStmt;
     private PreparedStatement fetchPlannedActivityStmt;
     private PreparedStatement fetchAdminExamHoursForCourseStmt;
-    private PreparedStatement fetchStudyPeriodsStmt;
-
-    private PreparedStatement fetchCourseHoursStmt;
     private PreparedStatement fetchAvgSalaryEmployeeStmt;
     private PreparedStatement showTeachingCostsStmt;
     private PreparedStatement computeTeachingCostStmt;
@@ -213,53 +208,15 @@ public class TeachingActivityDAO {
             "JOIN study_period sp ON cisp.study_period_id = sp.id \n" + //
             "WHERE ci.id = ?"
         );
-
-
-                
-        computeTeachingCostStmt = connection.prepareStatement(
-                "SELECT\n" + //
-                "    cl.course_code,\n" + //
-                "    ci." + CI_PK_COLUMN_NAME  + " AS course_instance,\n" + //
-                "    sp.period_name AS study_period,\n" + //
-                "    SUM(\n" + //
-                "        eJs.avgS * pa.planned_hours + \n" + //
-                "        eJs.avgS * aaeh.admin_hours_per_employee +\n" + //
-                "        eJs.avgS * aaeh.exam_hours_per_employee\n" + //
-                "        ) planned_cost,\n" + //
-                "    SUM(\n" + //
-                "        eJS.avgS * pa.allocated_hours + \n" + //
-                "        eJs.avgS * aaeh.admin_hours_per_employee +\n" + //
-                "        eJs.avgS * aaeh.exam_hours_per_employee\n" + //
-                "        ) actual_cost \n" + //
-                "FROM\n" + //
-                     PLANNED_ACTIVITY_TABLE_NAME + " pa \n" + //
-                "    JOIN " + CI_TABLE_NAME + " ci ON pa.course_instance_id = ci." + CI_PK_COLUMN_NAME 
-                        + " AND ci." + CI_PK_COLUMN_NAME + " = ? AND ci.study_year = ? \n" + //
-                "    JOIN course_version cv ON ci.course_version_id = cv.id\n" + //
-                "    JOIN course_layout cl ON cv.course_layout_id = cl.id\n" + //
-                "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\n" + //
-                "    JOIN study_period sp ON cisp.study_period_id = sp.id\n" + //
-                "    JOIN admin_and_exam_hours_per_employee_and_course aaeh ON ci." + CI_PK_COLUMN_NAME 
-                        + " = aaeh.ciid\n" + //
-                "    JOIN (\n" + //
-                "        SELECT\n" + //
-                "            e.id,\n" + //
-                "            AVG(es.salary_per_hour) avgS\n" + //
-                "        FROM\n" + //
-                "            employee e \n" + //
-                "            JOIN employee_salary es ON e.id = es.employee_id\n" + //
-                "            FOR UPDATE \n" + //
-                "        GROUP BY\n" + //
-                "            es.employee_id,\n" + //
-                "            e.id\n" + //
-                "    ) eJs ON eJs.id = pa.employee_id \n" + //
-                "GROUP BY\n" + //
-                "    cl.course_code,\n" + //
-                "    ci." + CI_PK_COLUMN_NAME  + ",\n" + //
-                "    sp.period_name \n" + //
-                "ORDER BY course_instance;"
-            );
     }
+
+    /**
+     * Task A1
+     * 
+     * @param cid course_instance_id
+     * @return TeachingCostDTO that contains wanted output row if execution is successful, else null
+     * @throws SQLException if query can not be executed
+     */
 
     public CourseInstanceDTO fetchCourseInstance(int cid, String year) throws SQLException {
             
@@ -385,37 +342,6 @@ public class TeachingActivityDAO {
         }
         return allTeachingCosts;
     }
-        
-    /**
-     * Task A1
-     * 
-     * @param cid course_instance_id
-     * @return TeachingCostDTO that contains wanted output row if execution is successful, else null
-     * @throws SQLException if query can not be executed
-     */
-    public TeachingCostDTO calculateTeachingCosts(int cid) throws SQLException {
-            
-        TeachingCostDTO teachingCosts = null;
-        
-        try {
-            computeTeachingCostStmt.setInt(1, cid);
-            ResultSet rs = computeTeachingCostStmt.executeQuery();
-        
-            while (rs.next()){
-                teachingCosts = new TeachingCostDTO(
-                    rs.getString("course_code"), 
-                    rs.getInt("course_instance"), 
-                    rs.getString("study_period"),
-                    rs.getDouble("planned_cost"),
-                    rs.getDouble("actual_cost")
-                );
-            }
-                    
-        } catch (SQLException se){
-            System.out.println("1pp" + se);
-        }
-        return teachingCosts;
-    }
 
     public void createTeachingActivity(TADTO TA) throws TeachingActivityDBException {
         String failureMsg = "Could not create teaching activity: " + TA.getTAName();
@@ -435,6 +361,7 @@ public class TeachingActivityDAO {
             handleException(failureMsg, sqle);
         }
     }
+
     private String findTAByName(String activityName) throws SQLException {
         ResultSet result = null;
         findTAStmt.setString(1, activityName);//kan vara fel kolumn
