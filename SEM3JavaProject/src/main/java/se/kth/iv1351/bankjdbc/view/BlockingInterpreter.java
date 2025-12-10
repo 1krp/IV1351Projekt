@@ -101,11 +101,12 @@ public class BlockingInterpreter {
                         ctrl.modifyNumStudendsInCourseInstance( Integer.parseInt(cmdLine.getParameter(0)), 
                                                                 Integer.parseInt(cmdLine.getParameter(1)));
                         break;
-                    case INSERT_PLANNED_ACTIVITY:
+                    case ALLOCATE_PLANNED_ACTIVITY:
                         /* TO DO */
                         break;
-                    case DELETE_PLANNED_ACTIVITY:
-                        /* TO DO */
+                    case DEALLOCATE_PLANNED_ACTIVITY:
+                        ctrl.deallocatePlannedActivity(Integer.parseInt(cmdLine.getParameter(0)));
+                        System.out.println("Planned activity deallocated.");
                         break;
                     case UPDATE_MAX_TEACHER_ALLOCATION:
                         ctrl.updateTeacherAllocationLimit(Integer.parseInt(cmdLine.getParameter(0)));

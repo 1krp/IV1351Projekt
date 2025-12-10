@@ -58,6 +58,7 @@ public class TeachingActivityDAO {
     private static final String PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID = "activity_id";
     private static final String PLANNED_ACTIVITY_COLUMN_EMPLOYEE_ID = "employee_id";
     private static final String PLANNED_ACTIVITY_COLUMN_COURSE_INSTANCE_ID = "course_instance_id";
+    
 
     private static final String EC_C_TABLE_NAME = "employment_constants";
     private static final String EC_C_COLUMN_NAME = "max_courses";
@@ -80,6 +81,7 @@ public class TeachingActivityDAO {
     private PreparedStatement findTAStmt;
     private PreparedStatement insertNewActivityStmt;
     private PreparedStatement displayTAStmt;
+    private PreparedStatement deallocatePAStmt;
     
 
     /**
@@ -136,6 +138,21 @@ public class TeachingActivityDAO {
         }
     }
 
+    public void deallocatePlannedActivity(int plannedActivityId) throws TeachingActivityDBException {
+        String failureMsg = "Could not deallocate the planned activity with id: " + plannedActivityId;
+        try{
+            deallocatePAStmt.setInt(1, plannedActivityId);
+
+            int updatedRows = deallocatePAStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+            connection.commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
+
     /**
      * Commits the current transaction.
      * 
@@ -164,7 +181,7 @@ public class TeachingActivityDAO {
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
         connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
-                "postgres", "cbmmlp");
+                "postgres", "asd123");
         connection.setAutoCommit(false);
     }
 
@@ -235,6 +252,9 @@ public class TeachingActivityDAO {
             "JOIN study_period sp ON cisp.study_period_id = sp.id \n" + //
             "WHERE ci.id = ?"
         );
+
+        deallocatePAStmt = connection.prepareStatement("DELETE FROM " + PLANNED_ACTIVITY_TABLE_NAME 
+                + " WHERE " + PLANNED_ACTIVITY_PK_ID + "= ?");
     }
 
     /**
