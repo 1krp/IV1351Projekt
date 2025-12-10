@@ -335,7 +335,7 @@ public class TeachingActivityDAO {
 
         findPAsForTeacherStmt = connection.prepareStatement(
             "SELECT  \r\n" + //
-            "    COUNT(DISTINCT ci.id) AS num_courses,\r\n" + //
+            "    COUNT(ci.id) AS num_courses,\r\n" + //
             "    sp.period_name\r\n" + //
             "FROM\r\n" + //
             "    planned_activity pa \r\n" + //
