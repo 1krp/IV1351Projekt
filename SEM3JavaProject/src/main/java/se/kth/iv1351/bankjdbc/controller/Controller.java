@@ -59,12 +59,38 @@ public class Controller {
      * Task A1 - Fetches the teaching costs for a given course and year
      * Communicates with database through the model layer
      * 
-     * @param cid   course instance id of course to calculate teaching costs for
+     * @param courseId   course instance id of course to calculate teaching costs for
      * @param year  studdy year to calculate teaching costs for
      * @return      a list with the teaching costs for a course for each study period of a given year
      */
-    public ArrayList<TeachingCostDTO> fetchTeachingCostsForCourse(int cid, String year){
-        return tcCalculator.calculateTeachingCostsForCourse(cid, year);
+    public ArrayList<TeachingCostDTO> fetchTeachingCostsForCourse(int courseId, String year){
+        return tcCalculator.calculateTeachingCostsForCourse(courseId, year);
+    }
+
+    /**
+     * Task A2 - Modifies number of students for a course instance
+     * 
+     * @param courseInstanceId
+     * @param numStudents
+     * @throws RejectedException
+     */
+    public void modifyNumStudendsInCourseInstance(int courseInstanceId, int numStudents) 
+        throws RejectedException {
+
+        String failureMsg = "Could not update num_students to " + numStudents;
+        
+        if (courseInstanceId < 0 || numStudents < 0) {
+            throw new RejectedException(failureMsg);
+        }
+
+        try {
+            teachingActivityDAO.updateNumStudendsInCourseInstance(courseInstanceId, numStudents);
+        } catch (TeachingActivityDBException tadbe) {
+            throw new RejectedException(failureMsg, tadbe);
+        } catch (Exception e) {
+            commitOngoingTransaction(failureMsg);
+            throw new RejectedException(failureMsg, e);
+        }
     }
 
     /**
@@ -144,31 +170,6 @@ public class Controller {
         throws TeachingActivityDBException{
 
         return teachingActivityDAO.showTAs(activityName);
-    }
-
-    /**
-     * 
-     * @param courseInstanceId
-     * @param numStudents
-     * @throws RejectedException
-     */
-    public void modifyNumStudendsInCourseInstance(int courseInstanceId, int numStudents) 
-        throws RejectedException {
-
-        String failureMsg = "Could not update num_students to " + numStudents;
-        
-        if (courseInstanceId < 0 || numStudents < 0) {
-            throw new RejectedException(failureMsg);
-        }
-
-        try {
-            teachingActivityDAO.updateNumStudendsInCourseInstance(courseInstanceId, numStudents);
-        } catch (TeachingActivityDBException tadbe) {
-            throw new RejectedException(failureMsg, tadbe);
-        } catch (Exception e) {
-            commitOngoingTransaction(failureMsg);
-            throw new RejectedException(failureMsg, e);
-        }
     }
 
     /**
