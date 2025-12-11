@@ -115,24 +115,7 @@ public class Controller {
         }
     }
 
-    /**
-     * 
-     * @param activityName
-     * @throws RejectedException
-     */
-    public void deleteTeacherActivity(String activityName) throws RejectedException{
-
-        String failureMsg = "Could not delete "+ activityName +" from teaching activity";
-
-        try{
-            teachingActivityDAO.removeActivity(activityName);
-        } catch(TeachingActivityDBException tadbe){
-            throw new RejectedException(failureMsg, tadbe);
-        } catch (Exception e) {
-            commitOngoingTransaction(failureMsg);
-            throw new RejectedException(failureMsg, e);
-        }
-    }
+    
 
     /**
      * 

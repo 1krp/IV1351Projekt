@@ -32,13 +32,6 @@ import java.util.ArrayList;
 
 import se.kth.iv1351.bankjdbc.model.DTO.*;
 
-import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.AdminExamHoursDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.TeacherAllocationDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.SalaryDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.CourseInstanceDTO;
-
 /**
  * This data access object (DAO) encapsulates all database calls in the bank
  * application. No code outside this class shall have any knowledge about the
@@ -269,8 +262,8 @@ public class TeachingActivityDAO {
     }
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
-        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
-                "postgres", "cbmmlp");
+        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres",
+                "Sparfbag", "Sagastass20!");
         connection.setAutoCommit(false);
     }
 
@@ -558,11 +551,12 @@ public class TeachingActivityDAO {
     public void createTAInPA(String activityName, double factor, int employee_id, int course_instance_id, int planned_hours, int allocated_hours)
      throws TeachingActivityDBException {
         int activityId = createTeachingActivity(activityName,factor);
-        String failureMsgId = "Id cannot be zero: " + activityId;
+        String failureMsgId = activityName+" Already exists"; ;
         String failureMsg = "Could not create the planned activity with activity id: " + activityId;
         String failureMsgSQL = "SQL error when adding: " + activityId;
-        if(activityId==0){
+        if(activityId==0 || activityId==-1){
             handleException(failureMsgId, null);
+            return;
         }
         int updatedRows = 0;
         try {
@@ -609,60 +603,44 @@ public class TeachingActivityDAO {
         String failureMsgDontAdd = activityName+" Already exists";
         int updatedRows = 0;
         int activityId = 0;
-        
         try {
-            activityId = findTAByName(activityName);
+            activityId = doesTAAlreadyExist(activityName);
             if (activityId == 0) {
+    
                 createTAStmt.setString(1, activityName);
                 createTAStmt.setDouble(2, factor);
                 updatedRows = createTAStmt.executeUpdate();
                 if (updatedRows != 1) {
                     handleException(failureMsgUpdate, null);
                 }
-            } 
-        connection.commit();
-        } catch (SQLException sqle) {
-            handleException(failureMsgSQL, sqle);
-        }
-        if (activityId == 0) {
-            try(ResultSet generatedKeys = createTAStmt.getGeneratedKeys()){
-                if(generatedKeys.next()){
+                ResultSet generatedKeys = createTAStmt.getGeneratedKeys();
+                if (generatedKeys.next()){
                     activityId = generatedKeys.getInt(1);
                 }
-            }catch (SQLException sqle) {
-                handleException(failureMsgSQLKeys, sqle);
-            }
-        }else{
-            handleException(failureMsgDontAdd, null);}
+            }else{
+                handleException(failureMsgDontAdd, null);
+            } 
+
+        } catch (SQLException sqle) {
+             handleException(failureMsgSQL, sqle);
+        }
+        
         return activityId;
     }
-    public void removeActivity(String activityName) throws TeachingActivityDBException {
-        String msg = "No deleted rows for: "+activityName;
-        String failureMsgSQL = "SQL error for: " + activityName;
-        try{
-        deleteActivityStmt.setString(1,activityName);
-        int updatedRows = deleteActivityStmt.executeUpdate();
-        if( updatedRows != 0){
-            handleException(msg, null);
-        }
-        connection.commit();
-        }catch(SQLException sql){
-            handleException(failureMsgSQL, sql);
-        }
-    }
-    private int findTAByName(String activityName) throws SQLException {
+   
+    private int doesTAAlreadyExist(String activityName) throws SQLException {
 
         ResultSet result = null;
         findTAStmt.setString(1, activityName);
         result = findTAStmt.executeQuery();
         if (result.next()) {
-            return result.getInt(TEACHING_ACTIVITY_TABLE_PK);
+            return -1;
         }
         return 0;
     }
 
     private void handleException(String failureMsg, Exception cause) throws TeachingActivityDBException {
-        String completeFailureMsg = failureMsg + cause.getMessage();
+        String completeFailureMsg = failureMsg;
         try {
             connection.rollback();
         } catch (SQLException rollbackExc) {
