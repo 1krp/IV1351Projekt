@@ -125,7 +125,7 @@ public class TeachingActivityDAO {
             if (updatedRows != 1) {
                 handleException(failureMsg, null);
             }
-            connection.commit();
+            commit();
         } catch (SQLException sqle) {
             handleException(failureMsg, sqle);
         }
@@ -142,7 +142,7 @@ public class TeachingActivityDAO {
             if (updatedRows != 1) {
                 handleException(failureMsg, null);
             }
-            connection.commit();
+            commit();
         } catch (SQLException sqle) {
             handleException(failureMsg, sqle);
         }
@@ -157,7 +157,7 @@ public class TeachingActivityDAO {
             if (updatedRows != 1) {
                 handleException(failureMsg, null);
             }
-            connection.commit();
+            commit();
         } catch (SQLException sqle) {
             handleException(failureMsg, sqle);
         }
@@ -236,7 +236,7 @@ public class TeachingActivityDAO {
                 handleException(failureMsg, null);
             }
 
-            connection.commit();
+            commit();
         } catch (SQLException sqle) {
             handleException(failureMsg, sqle);
         }
@@ -270,7 +270,7 @@ public class TeachingActivityDAO {
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
         connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
-                "postgres", "asd123");
+                "postgres", "cbmmlp");
         connection.setAutoCommit(false);
     }
 
@@ -367,10 +367,10 @@ public class TeachingActivityDAO {
                     "FROM " + CI_TABLE_NAME + " ci\n" +
                     "JOIN course_instance_study_period cisp ON ci." + CI_PK_COLUMN_NAME + " = cisp.course_instance_id\n" + //
                     "JOIN study_period sp ON cisp.study_period_id = sp.id\n" +
-                    "WHERE ci." + CI_PK_COLUMN_NAME + " = ?");
+                    "WHERE ci." + CI_PK_COLUMN_NAME + " = ? FOR UPDATE");
         
         findMaxCoursesPerTeacherStmt = connection.prepareStatement("SELECT " + EC_C_COLUMN_NAME
-                + " FROM " + EC_C_TABLE_NAME + " WHERE " + EC_C_PK_COLUMN_NAME + "=1" );
+                + " FROM " + EC_C_TABLE_NAME + " WHERE " + EC_C_PK_COLUMN_NAME + " = 1 FOR SHARE");
 
         createPlannedActivityStmt = connection.prepareStatement("INSERT INTO " + PLANNED_ACTIVITY_TABLE_NAME
                 + "(employee_id, course_instance_id, planned_hours, allocated_hours, activity_id) VALUES (?, ?, ?, ?, ?)");
@@ -664,7 +664,7 @@ public class TeachingActivityDAO {
     }
 
     private void handleException(String failureMsg, Exception cause) throws TeachingActivityDBException {
-        String completeFailureMsg = failureMsg + cause.getMessage();
+        String completeFailureMsg = failureMsg;
         try {
             connection.rollback();
         } catch (SQLException rollbackExc) {
