@@ -28,7 +28,7 @@ public class TeacherAllocatePA {
             
             if ( (courseInstancePeriod.equals(allocation.getPeriod()) && (allocation.getNumCourses() < maxCourses))) {
                 
-                if (allocation.getNumCourses() + 1 > maxCourses) {
+                if (allocation.getNumCourses() >= maxCourses) {
                     throw new AllocationLimitExceededException(
                             "Teacher has exceeded maximum allowed courses for period: " + courseInstancePeriod + ". Number of courses: " 
                                     + allocation.getNumCourses() + ", max: " + maxCourses
