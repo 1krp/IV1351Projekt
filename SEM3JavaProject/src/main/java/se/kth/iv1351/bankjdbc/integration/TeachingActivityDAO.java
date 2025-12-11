@@ -89,7 +89,7 @@ public class TeachingActivityDAO {
     private PreparedStatement showTeachingCostsStmt;
     private PreparedStatement deallocatePAStmt;
     private PreparedStatement findPAsForTeacherStmt;
-    private PreparedStatement findPeriodForCoursinstanceStmt;
+    private PreparedStatement findPeriodForCourseInstanceStmt;
     private PreparedStatement findMaxCoursesPerTeacherStmt;
     private PreparedStatement createPlannedActivityStmt;
     
@@ -312,7 +312,7 @@ public class TeachingActivityDAO {
             "FROM " + CI_TABLE_NAME + " ci \n" + //
             "JOIN " + CV_TABLE_NAME + " cv ON ci.course_version_id = cv." + CV_PK_COLUMN_NAME + " \n" + //
             "JOIN " + CL_TABLE_NAME + " cl ON cv.course_layout_id = cl." + CL_PK_COLUMN_NAME + "\n" + //
-            "WHERE ci." + CI_PK_COLUMN_NAME + " = ? AND ci.study_year = ? FOR UPDATE"
+            "WHERE ci." + CI_PK_COLUMN_NAME + " = ? AND ci.study_year = ? FOR SHARE"
         );
 
         fetchPlannedActivityStmt = connection.prepareStatement(
@@ -320,7 +320,7 @@ public class TeachingActivityDAO {
             "FROM planned_activity pa JOIN teaching_activity ta ON pa.activity_id = ta.id\n" + //
             "JOIN " + CI_TABLE_NAME + " ci ON pa.course_instance_id = ci." + CI_PK_COLUMN_NAME + " AND ci." + CI_PK_COLUMN_NAME + " = ? \n" + //
             "JOIN " + CV_TABLE_NAME + " cv ON ci.course_version_id = cv." + CV_PK_COLUMN_NAME + " \n" + //
-            "JOIN " + CL_TABLE_NAME + " cl ON cv.course_layout_id = cl." + CL_PK_COLUMN_NAME + " FOR UPDATE"
+            "JOIN " + CL_TABLE_NAME + " cl ON cv.course_layout_id = cl." + CL_PK_COLUMN_NAME + " FOR SHARE"
         );
 
         fetchAdminExamHoursForCourseStmt = connection.prepareStatement(
@@ -332,7 +332,7 @@ public class TeachingActivityDAO {
 
         fetchSalaryEmployeeStmt = connection.prepareStatement(
             "SELECT es.employee_id, es.salary_per_hour \n" + //
-            "FROM employee_salary es WHERE es.employee_id = ? FOR UPDATE");
+            "FROM employee_salary es WHERE es.employee_id = ? FOR SHARE");
 
         showTeachingCostsStmt = connection.prepareStatement(
             "SELECT cl.course_code, ci." + CI_PK_COLUMN_NAME  + " AS course_instance,\n" +
@@ -362,11 +362,11 @@ public class TeachingActivityDAO {
             "GROUP BY sp.period_name"
         );
 
-        findPeriodForCoursinstanceStmt = connection.prepareStatement(
-                "SELECT sp.period_name\n" + //
-                    "FROM " + CI_TABLE_NAME + " ci\n" + //
+        findPeriodForCourseInstanceStmt = connection.prepareStatement(
+                "SELECT sp.period_name\n" +
+                    "FROM " + CI_TABLE_NAME + " ci\n" +
                     "JOIN course_instance_study_period cisp ON ci." + CI_PK_COLUMN_NAME + " = cisp.course_instance_id\n" + //
-                    "JOIN study_period sp ON cisp.study_period_id = sp.id\n" + //
+                    "JOIN study_period sp ON cisp.study_period_id = sp.id\n" +
                     "WHERE ci." + CI_PK_COLUMN_NAME + " = ?");
         
         findMaxCoursesPerTeacherStmt = connection.prepareStatement("SELECT " + EC_C_COLUMN_NAME
@@ -551,6 +551,8 @@ public class TeachingActivityDAO {
             String erMsg = "Error when trying to fetch rows for teaching costs.";
             handleException(erMsg, se);
         }
+
+        commit();
         return allTeachingCosts;
     }
 
@@ -575,7 +577,7 @@ public class TeachingActivityDAO {
         if (updatedRows != 1) {
                 handleException(failureMsg, null);
             }
-        connection.commit();
+        commit();
         } catch (SQLException sqle) {
             handleException(failureMsgSQL, sqle);
         }    
@@ -620,7 +622,7 @@ public class TeachingActivityDAO {
                     handleException(failureMsgUpdate, null);
                 }
             } 
-        connection.commit();
+        commit();
         } catch (SQLException sqle) {
             handleException(failureMsgSQL, sqle);
         }
@@ -645,7 +647,7 @@ public class TeachingActivityDAO {
         if( updatedRows != 0){
             handleException(msg, null);
         }
-        connection.commit();
+        commit();
         }catch(SQLException sql){
             handleException(failureMsgSQL, sql);
         }

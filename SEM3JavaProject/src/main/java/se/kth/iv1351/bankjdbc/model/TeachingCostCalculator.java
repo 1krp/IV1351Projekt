@@ -51,8 +51,6 @@ public class TeachingCostCalculator {
             ArrayList<TeachingCostDTO> result = dao.createTeachingCostsForCourseView(
                     plannedCost, actualCost, courseInstance.getId());
 
-            dao.commit();
-
             return result;
         } catch (TeachingActivityDBException tae) {
             dao.rollback();
