@@ -26,3 +26,7 @@ SELECT * FROM employment_constants
                 JOIN study_period sp ON cisp.study_period_id = sp.id
             WHERE pa.employee_id = 1
             GROUP BY sp.period_name
+
+
+
+SELECT * FROM course_instance
