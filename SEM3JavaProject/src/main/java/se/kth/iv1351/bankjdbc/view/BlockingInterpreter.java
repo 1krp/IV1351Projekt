@@ -134,9 +134,6 @@ public class BlockingInterpreter {
                                                                 Integer.parseInt(cmdLine.getParameter(4)),
                                                                 Integer.parseInt(cmdLine.getParameter(5)));
                         break;
-                    case REMOVE_ACTIVITY:
-                        ctrl.deleteTeacherActivity(cmdLine.getParameter(0));
-                        break;
                     case SHOW_TEACHING_ACTIVITY:
                         ArrayList<PAjoinTADTO> joinedDTOs = ctrl.showTeachingActivity(cmdLine.getParameter(0));
                         

@@ -70,7 +70,6 @@ public class TeachingActivityDAO {
     private PreparedStatement updateNumStudendsInCIStmt;
     private PreparedStatement createTAStmt;
     private PreparedStatement findTAStmt;
-    private PreparedStatement deleteActivityStmt;
     private PreparedStatement insertNewActivityStmt;
     private PreparedStatement displayTAStmt;
     private PreparedStatement fetchCourseInstanceStmt;
@@ -149,9 +148,6 @@ public class TeachingActivityDAO {
 
         findTAStmt = connection.prepareStatement("SELECT " + TEACHING_ACTIVITY_TABLE_PK
                 + " FROM " + TEACHING_ACTIVITY_TABLE_NAME + " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " = ?"); //Om TA redan finns
-
-        deleteActivityStmt = connection.prepareStatement("DELETE FROM " + TEACHING_ACTIVITY_TABLE_NAME + 
-        " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " =?");
 
         insertNewActivityStmt = connection.prepareStatement("INSERT INTO "+ PLANNED_ACTIVITY_TABLE_NAME +"(" 
         + PLANNED_ACTIVITY_COLUMN_EMPLOYEE_ID + ", " + PLANNED_ACTIVITY_COLUMN_COURSE_INSTANCE_ID + ", " +
