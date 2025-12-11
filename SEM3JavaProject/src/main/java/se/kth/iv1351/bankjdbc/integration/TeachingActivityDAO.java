@@ -97,142 +97,6 @@ public class TeachingActivityDAO {
         }
     }
 
-
-
-    /**
-     * Updates the max_courses limit in the employment_constants table
-     * 
-     * @param newLimit
-     * @throws TeachingActivityDBException
-     */
-
-    public void updateTeacherAllocationLimit(int newLimit) throws TeachingActivityDBException {
-        String failureMsg = "Could not update max_courses to: " + newLimit;
-        try{
-            updateTeacherAllocationLimitStmt.setInt(1, newLimit);
-            updateTeacherAllocationLimitStmt.setInt(2, 1);
-
-            int updatedRows = updateTeacherAllocationLimitStmt.executeUpdate();
-            if (updatedRows != 1) {
-                handleException(failureMsg, null);
-            }
-            commit();
-        } catch (SQLException sqle) {
-            handleException(failureMsg, sqle);
-        }
-    }
-
-
-    public void updateNumStudendsInCourseInstance(int courseInstanceId, int numStudents) throws TeachingActivityDBException {
-        String failureMsg = "Could not update num_students to: " + numStudents;
-        try{
-            updateNumStudendsInCIStmt.setInt(1, numStudents);
-            updateNumStudendsInCIStmt.setInt(2, courseInstanceId);
-
-            int updatedRows = updateNumStudendsInCIStmt.executeUpdate();
-            if (updatedRows != 1) {
-                handleException(failureMsg, null);
-            }
-            commit();
-        } catch (SQLException sqle) {
-            handleException(failureMsg, sqle);
-        }
-    }
-
-    public void deallocatePlannedActivity(int plannedActivityId) throws TeachingActivityDBException {
-        String failureMsg = "Could not deallocate the planned activity with id: " + plannedActivityId;
-        try{
-            deallocatePAStmt.setInt(1, plannedActivityId);
-
-            int updatedRows = deallocatePAStmt.executeUpdate();
-            if (updatedRows != 1) {
-                handleException(failureMsg, null);
-            }
-            commit();
-        } catch (SQLException sqle) {
-            handleException(failureMsg, sqle);
-        }
-    }
-
-    public ArrayList<TeacherAllocationDTO> findTeacherAllocationPeriod(String year, int employeeId) throws TeachingActivityDBException {
-        String failureMsg = "Could not search for teacher allocation pressure";
-        String closeMsg = "Could not close result set for teacher allocation pressure";
-        ArrayList<TeacherAllocationDTO> allocations = new ArrayList<>();
-        try {
-
-            findPAsForTeacherStmt.setString(1, year);
-            findPAsForTeacherStmt.setInt(2, employeeId);
-
-            ResultSet result = findPAsForTeacherStmt.executeQuery();
-            while (result.next()) {
-                TeacherAllocationDTO allocationDTO = new TeacherAllocationDTO(
-                    result.getInt("num_courses"),
-                    result.getString("period_name")
-                );
-                allocations.add(allocationDTO);
-            }
-            closeResultSet(closeMsg, result);
-        } catch (SQLException sqle) {
-            handleException(failureMsg, sqle);
-        } 
-
-        return allocations;
-    }
-
-    public String findPeriodForCourseInstance(int courseInstanceId) throws TeachingActivityDBException {
-        String failureMsg = "Could not find period for given course instance";
-
-        try {
-            findPeriodForCourseInstanceStmt.setInt(1, courseInstanceId);
-
-            try (ResultSet result = findPeriodForCourseInstanceStmt.executeQuery()) {
-                if (result.next()) {
-                    return result.getString(1);
-                } else {
-                    throw new TeachingActivityDBException("No max courses value found"); 
-                }
-            }
-
-        } catch (SQLException e) {
-            throw new TeachingActivityDBException(failureMsg, e);
-        }
-    }
-
-    public int findMaxCoursesPerTeacher() throws TeachingActivityDBException {
-        String failureMsg = "Could not search max courses per teacher";
-
-        try (ResultSet result = findMaxCoursesPerTeacherStmt.executeQuery()) {
-            if (result.next()) {
-                return result.getInt(1);
-            } else {
-                return 0; 
-            }
-        } catch (SQLException e) {
-            throw new TeachingActivityDBException(failureMsg, e);
-        }
-    }
-
-    public void createPlannedActivity(PlannedActivityDTO plannedDTO) throws TeachingActivityDBException {
-        String failureMsg = "Could not allocate activity";
-        int updatedRows = 0;
-        try {
-            createPlannedActivityStmt.setInt(1, plannedDTO.getEmpId());
-            createPlannedActivityStmt.setInt(2, plannedDTO.getCourseId());
-            createPlannedActivityStmt.setInt(3, plannedDTO.getPlannedHours());
-            createPlannedActivityStmt.setInt(4, plannedDTO.getAllocatedHours());
-            createPlannedActivityStmt.setInt(5, plannedDTO.getTActivity());
-
-            updatedRows = createPlannedActivityStmt.executeUpdate();
-            if (updatedRows != 1) {
-                handleException(failureMsg, null);
-            }
-
-            commit();
-        } catch (SQLException sqle) {
-            handleException(failureMsg, sqle);
-        }
-    }
-
     /**
      * Commits the current transaction.
      * 
@@ -259,6 +123,11 @@ public class TeachingActivityDAO {
         }
     }
 
+    /**
+     * 
+     * @throws ClassNotFoundException
+     * @throws SQLException
+     */
     private void connectToDB() throws ClassNotFoundException, SQLException {
         connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres",
                 "Sparfbag", "Sagastass20!");
@@ -272,10 +141,11 @@ public class TeachingActivityDAO {
      */
     private void prepareStatements() throws SQLException {
         updateTeacherAllocationLimitStmt = connection.prepareStatement("UPDATE " + EC_C_TABLE_NAME 
-                + " SET " + EC_C_COLUMN_NAME + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
+            + " SET " + EC_C_COLUMN_NAME + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
 
         createTAStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME 
-                + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ", "+ TEACHING_ACTIVITY_COLUMN_FACTOR +") VALUES (?,?)", Statement.RETURN_GENERATED_KEYS);//Exercise
+            + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ", "+ TEACHING_ACTIVITY_COLUMN_FACTOR +") " + 
+            "VALUES (?,?)", Statement.RETURN_GENERATED_KEYS);
 
         findTAStmt = connection.prepareStatement("SELECT " + TEACHING_ACTIVITY_TABLE_PK
                 + " FROM " + TEACHING_ACTIVITY_TABLE_NAME + " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " = ?"); //Om TA redan finns
@@ -291,9 +161,13 @@ public class TeachingActivityDAO {
         updateNumStudendsInCIStmt = connection.prepareStatement("UPDATE " + CI_TABLE_NAME 
                 + " SET " + CI_COLUMN_NAME + " = ? WHERE " + CI_PK_COLUMN_NAME + " = ?");
                 
-        displayTAStmt = connection.prepareStatement("SELECT planned_activity.employee_id, planned_activity.course_instance_id, planned_activity.planned_hours, planned_activity.allocated_hours, teaching_activity.activity_name\r\n" + //
-                        "FROM planned_activity\r\n" + //
-                        "INNER JOIN teaching_activity ON planned_activity.activity_id = teaching_activity.id WHERE teaching_activity.activity_name = ?");
+        displayTAStmt = connection.prepareStatement(
+            "SELECT planned_activity.employee_id, " +
+            "planned_activity.course_instance_id, planned_activity.planned_hours, " +
+            "planned_activity.allocated_hours, teaching_activity.activity_name\r\n" +
+            "FROM planned_activity\r\n" +
+            "INNER JOIN teaching_activity ON planned_activity.activity_id = teaching_activity.id " +
+            "WHERE teaching_activity.activity_name = ?");
 
         fetchCourseInstanceStmt = connection.prepareStatement(
             "SELECT ci." + CI_PK_COLUMN_NAME + ", ci.num_students, ci.study_year, cv.hp, cl.course_code \n" + //
@@ -544,7 +418,182 @@ public class TeachingActivityDAO {
         return allTeachingCosts;
     }
 
+    /**
+     * Updates the max_courses limit in the employment_constants table
+     * 
+     * @param newLimit
+     * @throws TeachingActivityDBException
+     */
+    public void updateTeacherAllocationLimit(int newLimit) throws TeachingActivityDBException {
+        String failureMsg = "Could not update max_courses to: " + newLimit;
+        try{
+            updateTeacherAllocationLimitStmt.setInt(1, newLimit);
+            updateTeacherAllocationLimitStmt.setInt(2, 1);
 
+            int updatedRows = updateTeacherAllocationLimitStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+            commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
+
+    /**
+     * 
+     * @param courseInstanceId
+     * @param numStudents
+     * @throws TeachingActivityDBException
+     */
+    public void updateNumStudendsInCourseInstance(int courseInstanceId, int numStudents) throws TeachingActivityDBException {
+        String failureMsg = "Could not update num_students to: " + numStudents;
+        try{
+            updateNumStudendsInCIStmt.setInt(1, numStudents);
+            updateNumStudendsInCIStmt.setInt(2, courseInstanceId);
+
+            int updatedRows = updateNumStudendsInCIStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+            commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
+
+    /**
+     * 
+     * @param plannedActivityId
+     * @throws TeachingActivityDBException
+     */
+    public void deallocatePlannedActivity(int plannedActivityId) throws TeachingActivityDBException {
+        String failureMsg = "Could not deallocate the planned activity with id: " + plannedActivityId;
+        try{
+            deallocatePAStmt.setInt(1, plannedActivityId);
+
+            int updatedRows = deallocatePAStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+            commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
+
+    /**
+     * 
+     * @param year
+     * @param employeeId
+     * @return
+     * @throws TeachingActivityDBException
+     */
+    public ArrayList<TeacherAllocationDTO> findTeacherAllocationPeriod(String year, int employeeId) throws TeachingActivityDBException {
+        String failureMsg = "Could not search for teacher allocation pressure";
+
+        ArrayList<TeacherAllocationDTO> allocations = new ArrayList<>();
+        try {
+
+            findPAsForTeacherStmt.setString(1, year);
+            findPAsForTeacherStmt.setInt(2, employeeId);
+
+            ResultSet result = findPAsForTeacherStmt.executeQuery();
+            while (result.next()) {
+                TeacherAllocationDTO allocationDTO = new TeacherAllocationDTO(
+                    result.getInt("num_courses"),
+                    result.getString("period_name")
+                );
+
+                allocations.add(allocationDTO);
+            }
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        } 
+
+        return allocations;
+    }
+
+    /**
+     * 
+     * @param courseInstanceId
+     * @return
+     * @throws TeachingActivityDBException
+     */
+    public String findPeriodForCourseInstance(int courseInstanceId) throws TeachingActivityDBException {
+        String failureMsg = "Could not find period for given course instance";
+
+        try {
+            findPeriodForCourseInstanceStmt.setInt(1, courseInstanceId);
+
+            try (ResultSet result = findPeriodForCourseInstanceStmt.executeQuery()) {
+                if (result.next()) {
+                    return result.getString(1);
+                } else {
+                    throw new TeachingActivityDBException("No max courses value found"); 
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new TeachingActivityDBException(failureMsg, e);
+        }
+    }
+
+    /**
+     * 
+     * @return
+     * @throws TeachingActivityDBException
+     */
+    public int findMaxCoursesPerTeacher() throws TeachingActivityDBException {
+        String failureMsg = "Could not search max courses per teacher";
+
+        try (ResultSet result = findMaxCoursesPerTeacherStmt.executeQuery()) {
+            if (result.next()) {
+                return result.getInt(1);
+            } else {
+                return 0; 
+            }
+        } catch (SQLException e) {
+            throw new TeachingActivityDBException(failureMsg, e);
+        }
+    }
+
+    /**
+     * 
+     * @param plannedDTO
+     * @throws TeachingActivityDBException
+     */
+    public void createPlannedActivity(PlannedActivityDTO plannedDTO) throws TeachingActivityDBException {
+        String failureMsg = "Could not allocate activity";
+        int updatedRows = 0;
+        try {
+            createPlannedActivityStmt.setInt(1, plannedDTO.getEmpId());
+            createPlannedActivityStmt.setInt(2, plannedDTO.getCourseId());
+            createPlannedActivityStmt.setInt(3, plannedDTO.getPlannedHours());
+            createPlannedActivityStmt.setInt(4, plannedDTO.getAllocatedHours());
+            createPlannedActivityStmt.setInt(5, plannedDTO.getTActivity());
+
+            updatedRows = createPlannedActivityStmt.executeUpdate();
+            if (updatedRows != 1) {
+                handleException(failureMsg, null);
+            }
+
+            commit();
+        } catch (SQLException sqle) {
+            handleException(failureMsg, sqle);
+        }
+    }
+
+    /**
+     * 
+     * @param activityName
+     * @param factor
+     * @param employee_id
+     * @param course_instance_id
+     * @param planned_hours
+     * @param allocated_hours
+     * @throws TeachingActivityDBException
+     */
     public void createTAInPA(String activityName, double factor, int employee_id, int course_instance_id, int planned_hours, int allocated_hours)
      throws TeachingActivityDBException {
         int activityId = createTeachingActivity(activityName,factor);
@@ -570,6 +619,13 @@ public class TeachingActivityDAO {
             handleException(failureMsgSQL, sqle);
         }    
     }
+
+    /**
+     * 
+     * @param activityName
+     * @return
+     * @throws TeachingActivityDBException
+     */
     public ArrayList<PAjoinTADTO> showTAs(String activityName) throws TeachingActivityDBException{
         String failureMsg = "Error";
         String closeMsg = "Could not close result set for teaching activity display";
@@ -594,6 +650,13 @@ public class TeachingActivityDAO {
         return joinedTable;
     }
 
+    /**
+     * 
+     * @param activityName
+     * @param factor
+     * @return
+     * @throws TeachingActivityDBException
+     */
     private int createTeachingActivity(String activityName, double factor) throws TeachingActivityDBException {
         String failureMsgUpdate = "Could not add teaching activity: " + activityName;
         String failureMsgSQL = "SQL error for: " + activityName;
@@ -619,6 +682,12 @@ public class TeachingActivityDAO {
         }
         return activityId;
     }
+
+    /**
+     * 
+     * @param activityName
+     * @throws TeachingActivityDBException
+     */
     public void removeActivity(String activityName) throws TeachingActivityDBException {
         String msg = "No deleted rows for: "+activityName;
         String failureMsgSQL = "SQL error for: " + activityName;
@@ -633,6 +702,13 @@ public class TeachingActivityDAO {
             handleException(failureMsgSQL, sql);
         }
     }
+
+    /**
+     * 
+     * @param activityName
+     * @return
+     * @throws SQLException
+     */
     private int findTAByName(String activityName) throws SQLException, TeachingActivityDBException {
         String closeMsg = "Could not close result set for teaching activity search";
         ResultSet result = null;
@@ -645,6 +721,12 @@ public class TeachingActivityDAO {
         return 0;
     }
 
+    /**
+     * 
+     * @param failureMsg
+     * @param cause
+     * @throws TeachingActivityDBException
+     */
     private void handleException(String failureMsg, Exception cause) throws TeachingActivityDBException {
         String completeFailureMsg = failureMsg;
         try {
@@ -659,6 +741,12 @@ public class TeachingActivityDAO {
         }
     }
 
+    /**
+     * 
+     * @param failureMsg
+     * @param result
+     * @throws TeachingActivityDBException
+     */
     private void closeResultSet(String failureMsg, ResultSet result) throws TeachingActivityDBException {
         try {
             result.close();
