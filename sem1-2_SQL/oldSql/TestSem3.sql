@@ -28,11 +28,14 @@ JOIN study_period sp ON cisp.study_period_id=sp.id
 
 -- ciids for emp
 SELECT 
-    DISTINCT ci.id ciid
+    DISTINCT ci.id ciid_per_emp,
+    sp.period_name
 
 FROM course_instance ci
 JOIN planned_activity pa On pa.course_instance_id=ci.id
-WHERE pa.employee_id = 1
+JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id
+JOIN study_period sp ON cisp.study_period_id = sp.id
+WHERE pa.employee_id = 1;
 
             -- the query for course allocation
             SELECT
