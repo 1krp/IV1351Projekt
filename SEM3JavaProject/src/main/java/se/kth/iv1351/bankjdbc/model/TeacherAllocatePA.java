@@ -31,6 +31,6 @@ public class TeacherAllocatePA {
                 return;
             }
         }
-        throw new AllocationLimitExceededException("No valid allocation found for teacher " + employeeId + " in period: " + courseInstancePeriod);
+        throw new AllocationLimitExceededException("Could not allocate planned activity for employee: " + employeeId + " in period: " + courseInstancePeriod);
     }
 } 
