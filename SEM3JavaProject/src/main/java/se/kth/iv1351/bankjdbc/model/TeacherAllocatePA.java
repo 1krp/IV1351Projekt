@@ -20,7 +20,7 @@ public class TeacherAllocatePA {
     public void allocatePlannedActivity(int employeeId, int courseInstanceId, int plannedHours, int activityID, int allocatedHours, String year) throws TeachingActivityDBException {
 
         PlannedActivityDTO plannedActivityDTO = new PlannedActivityDTO(0, employeeId, courseInstanceId, plannedHours, allocatedHours, activityID, 0);
-        String courseInstancePeriod = dao.findPeriodForCoursinstance(courseInstanceId);
+        String courseInstancePeriod = dao.findPeriodForCourseInstance(courseInstanceId);
         ArrayList<TeacherAllocationDTO> teacherAllocations = dao.findTeacherAllocationPeriod(year, employeeId);
         int maxCourses = dao.findMaxCoursesPerTeacher();
 

@@ -188,13 +188,13 @@ public class TeachingActivityDAO {
         return allocations;
     }
 
-    public String findPeriodForCoursinstance(int courseInstanceId) throws TeachingActivityDBException {
+    public String findPeriodForCourseInstance(int courseInstanceId) throws TeachingActivityDBException {
         String failureMsg = "Could not find period for given course instance";
 
         try {
-            findPeriodForCoursinstanceStmt.setInt(1, courseInstanceId);
+            findPeriodForCourseInstanceStmt.setInt(1, courseInstanceId);
 
-            try (ResultSet result = findPeriodForCoursinstanceStmt.executeQuery()) {
+            try (ResultSet result = findPeriodForCourseInstanceStmt.executeQuery()) {
                 if (result.next()) {
                     return result.getString(1);
                 } else {
