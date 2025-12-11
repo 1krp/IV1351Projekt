@@ -585,7 +585,7 @@ public class TeachingActivityDAO {
     }
 
     /**
-     * 
+     * Creates a teaching activity and a planned activity linked to it.
      * @param activityName
      * @param factor
      * @param employee_id
@@ -621,7 +621,7 @@ public class TeachingActivityDAO {
     }
 
     /**
-     * 
+     * Shows a teaching activity with their planned activities
      * @param activityName
      * @return
      * @throws TeachingActivityDBException
@@ -651,7 +651,7 @@ public class TeachingActivityDAO {
     }
 
     /**
-     * 
+     * Creates a teaching activity if it does not already exist.
      * @param activityName
      * @param factor
      * @return
@@ -684,27 +684,8 @@ public class TeachingActivityDAO {
     }
 
     /**
-     * 
-     * @param activityName
-     * @throws TeachingActivityDBException
-     */
-    public void removeActivity(String activityName) throws TeachingActivityDBException {
-        String msg = "No deleted rows for: "+activityName;
-        String failureMsgSQL = "SQL error for: " + activityName;
-        try{
-        deleteActivityStmt.setString(1,activityName);
-        int updatedRows = deleteActivityStmt.executeUpdate();
-        if( updatedRows != 0){
-            handleException(msg, null);
-        }
-        commit();
-        }catch(SQLException sql){
-            handleException(failureMsgSQL, sql);
-        }
-    }
-
-    /**
-     * 
+     * Finds a teaching activity by its name. Retrurns the activity's id if found,
+     * else returns 0.
      * @param activityName
      * @return
      * @throws SQLException
