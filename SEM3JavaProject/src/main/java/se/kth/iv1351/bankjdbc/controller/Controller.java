@@ -23,9 +23,7 @@
 
 package se.kth.iv1351.bankjdbc.controller;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
@@ -42,7 +40,7 @@ import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
  * the data, and finally tells the DAO to store the updated data (if any).
  */
 public class Controller {
-    private final TeachingActivityDAO TeachingActivityDb;
+    private final TeachingActivityDAO teachingActivityDAO;
     private final TeachingCostCalculator tcCalculator;
     private final TeacherAllocatePA tAllocatePA;
 
@@ -52,9 +50,9 @@ public class Controller {
      * @throws TeachingActivityDbException If unable to connect to the database.
      */
     public Controller() throws TeachingActivityDBException {
-        TeachingActivityDb = new TeachingActivityDAO();
-        tcCalculator = new TeachingCostCalculator(TeachingActivityDb);
-        tAllocatePA = new TeacherAllocatePA(TeachingActivityDb);
+        teachingActivityDAO = new TeachingActivityDAO();
+        tcCalculator = new TeachingCostCalculator(teachingActivityDAO);
+        tAllocatePA = new TeacherAllocatePA(teachingActivityDAO);
     }
 
     /**
@@ -69,6 +67,11 @@ public class Controller {
         return tcCalculator.calculateTeachingCostsForCourse(cid, year);
     }
 
+    /**
+     * 
+     * @param newLimit
+     * @throws RejectedException
+     */
     public void updateTeacherAllocationLimit(int newLimit) throws RejectedException {
         String failureMsg = "Could not update teacher allocation limit to: " + newLimit 
                 + ". Limit must be zero or higher.";
@@ -78,7 +81,7 @@ public class Controller {
         }
 
         try {
-            TeachingActivityDb.updateTeacherAllocationLimit(newLimit);
+            teachingActivityDAO.updateTeacherAllocationLimit(newLimit);
         } catch (TeachingActivityDBException tadbe) {
             throw new RejectedException(failureMsg, tadbe);
         } catch (Exception e) {
@@ -86,38 +89,72 @@ public class Controller {
         }
     }
 
+    /**
+     * 
+     * @param activityName
+     * @param factor
+     * @param employee_id
+     * @param course_instance_id
+     * @param planned_hours
+     * @param allocated_hours
+     * @throws RejectedException
+     */
+    public void insertNewActivityWithAssociations(String activityName, double factor, int employee_id, 
+        int course_instance_id, int planned_hours, int allocated_hours) throws RejectedException{
 
-    public void insertNewActivityWithAssociations(String activityName, double factor, int employee_id, int course_instance_id, int planned_hours, int allocated_hours)
-     throws RejectedException{
         String failureMsg = "Could not insert "+ activityName +" into planned activity";
-        try{
-            TeachingActivityDb.createTAInPA(activityName, factor, employee_id, course_instance_id, planned_hours, allocated_hours);
-        }
-        catch(TeachingActivityDBException tadbe){
+
+        try {
+            teachingActivityDAO.createTAInPA(activityName, factor, employee_id, course_instance_id, 
+                planned_hours, allocated_hours);
+        } catch(TeachingActivityDBException tadbe){
             throw new RejectedException(failureMsg, tadbe);
-        }catch (Exception e) {
+        } catch (Exception e) {
             commitOngoingTransaction(failureMsg);
             throw new RejectedException(failureMsg, e);
         }
     }
 
+    /**
+     * 
+     * @param activityName
+     * @throws RejectedException
+     */
     public void deleteTeacherActivity(String activityName) throws RejectedException{
+
         String failureMsg = "Could not delete "+ activityName +" from teaching activity";
+
         try{
-            TeachingActivityDb.removeActivity(activityName);
-        }
-        catch(TeachingActivityDBException tadbe){
+            teachingActivityDAO.removeActivity(activityName);
+        } catch(TeachingActivityDBException tadbe){
             throw new RejectedException(failureMsg, tadbe);
-        }catch (Exception e) {
+        } catch (Exception e) {
             commitOngoingTransaction(failureMsg);
             throw new RejectedException(failureMsg, e);
         }
     }
 
-    public ArrayList<PAjoinTADTO> showTeachingActivity(String activityName) throws TeachingActivityDBException{
-        return TeachingActivityDb.showTAs(activityName);
+    /**
+     * 
+     * @param activityName
+     * @return
+     * @throws TeachingActivityDBException
+     */
+    public ArrayList<PAjoinTADTO> showTeachingActivity(String activityName) 
+        throws TeachingActivityDBException{
+
+        return teachingActivityDAO.showTAs(activityName);
     }
-    public void modifyNumStudendsInCourseInstance(int courseInstanceId, int numStudents) throws RejectedException {
+
+    /**
+     * 
+     * @param courseInstanceId
+     * @param numStudents
+     * @throws RejectedException
+     */
+    public void modifyNumStudendsInCourseInstance(int courseInstanceId, int numStudents) 
+        throws RejectedException {
+
         String failureMsg = "Could not update num_students to " + numStudents;
         
         if (courseInstanceId < 0 || numStudents < 0) {
@@ -125,7 +162,7 @@ public class Controller {
         }
 
         try {
-            TeachingActivityDb.updateNumStudendsInCourseInstance(courseInstanceId, numStudents);
+            teachingActivityDAO.updateNumStudendsInCourseInstance(courseInstanceId, numStudents);
         } catch (TeachingActivityDBException tadbe) {
             throw new RejectedException(failureMsg, tadbe);
         } catch (Exception e) {
@@ -133,7 +170,14 @@ public class Controller {
             throw new RejectedException(failureMsg, e);
         }
     }
+
+    /**
+     * 
+     * @param plannedActivityId
+     * @throws RejectedException
+     */
     public void deallocatePlannedActivity(int plannedActivityId) throws RejectedException {
+
         String failureMsg = "Could not deallocate the planned activity with id: " + plannedActivityId;
 
         if (plannedActivityId < 1) {
@@ -141,30 +185,47 @@ public class Controller {
         }
 
         try {
-            TeachingActivityDb.deallocatePlannedActivity(plannedActivityId); 
+            teachingActivityDAO.deallocatePlannedActivity(plannedActivityId); 
         } catch (Exception e) {
             commitOngoingTransaction(failureMsg);
             throw new RejectedException(failureMsg, e);
         }
     }
 
-    public void allocatePlannedActivity(int employeeId, int courseInstanceId, int plannedHours, int activityID, int allocatedHours, String year) throws RejectedException {
+    /**
+     * 
+     * @param employeeId
+     * @param courseInstanceId
+     * @param plannedHours
+     * @param activityID
+     * @param allocatedHours
+     * @param year
+     * @throws RejectedException
+     */
+    public void allocatePlannedActivity(int employeeId, int courseInstanceId, int plannedHours, 
+        int activityID, int allocatedHours, String year) throws RejectedException {
+
         String failureMsg = "could not allocate activity";
-        try{
-            tAllocatePA.allocatePlannedActivity(employeeId, courseInstanceId, plannedHours, activityID, allocatedHours, year);
-        }
-        catch(TeachingActivityDBException tadbe){
+
+        try {
+            tAllocatePA.allocatePlannedActivity(employeeId, courseInstanceId, plannedHours, 
+                activityID, allocatedHours, year);
+        } catch(TeachingActivityDBException tadbe){
             throw new RejectedException(failureMsg, tadbe);
-        }catch (Exception e) {
+        } catch (Exception e) {
             commitOngoingTransaction(failureMsg);
             throw new RejectedException(failureMsg, e);
         }
     }
     
-     
+    /**
+     * 
+     * @param failureMsg
+     * @throws RejectedException
+     */
     private void commitOngoingTransaction(String failureMsg) throws RejectedException {
         try {
-            TeachingActivityDb.commit();
+            teachingActivityDAO.commit();
         } catch (TeachingActivityDBException tadbe) {
             throw new RejectedException(failureMsg, tadbe);
         }
