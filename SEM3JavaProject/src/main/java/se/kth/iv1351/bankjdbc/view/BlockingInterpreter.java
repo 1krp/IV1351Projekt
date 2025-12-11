@@ -90,7 +90,7 @@ public class BlockingInterpreter {
                                 "\n" +
                                 "Course Code: " + costDTO.getCourseCode() + "\n" +
                                 "Course Instance ID: " + costDTO.getCourseInstance() + "\n" +
-                                "Study Period: " +costDTO.getStudyPeriod() + "\n" +
+                                "Study Period: " + costDTO.getStudyPeriod() + "\n" +
                                 "Planned cost: " + costDTO.getPlannedCost() + "\n" +
                                 "Actual cost: " + costDTO.getActualCost() + "\n" +
                                 "\n");
@@ -98,8 +98,17 @@ public class BlockingInterpreter {
                         
                         break;
                     case MODIFY_COURSE_INSTANCE:
-                        ctrl.modifyNumStudendsInCourseInstance( Integer.parseInt(cmdLine.getParameter(0)), 
-                                                                Integer.parseInt(cmdLine.getParameter(1)));
+
+                        int instance_id = Integer.parseInt(cmdLine.getParameter(0));
+                        int new_num_students = Integer.parseInt(cmdLine.getParameter(1));
+
+                        ctrl.modifyNumStudendsInCourseInstance( instance_id, new_num_students);
+                        
+                        System.out.println(
+                            "\n" +
+                            "Course instance ID: " + instance_id + "\n" + 
+                            "Updated number of students: " + new_num_students
+                        );
                         break;
                     case ALLOCATE_PLANNED_ACTIVITY:
                         ctrl.allocatePlannedActivity(   Integer.parseInt(cmdLine.getParameter(0)), 

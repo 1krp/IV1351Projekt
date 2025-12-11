@@ -65,6 +65,10 @@ public class TeachingActivityDAO {
     private static final String CI_TABLE_NAME = "course_instance";
     private static final String CI_COLUMN_NAME = "num_students";
     private static final String CI_PK_COLUMN_NAME = "id";
+    private static final String CV_TABLE_NAME = "course_version";
+    private static final String CV_PK_COLUMN_NAME = "id";
+    private static final String CL_TABLE_NAME = "course_layout";
+    private static final String CL_PK_COLUMN_NAME = "id";
 
     private Connection connection;
 
@@ -304,24 +308,24 @@ public class TeachingActivityDAO {
                         "INNER JOIN teaching_activity ON planned_activity.activity_id = teaching_activity.id WHERE teaching_activity.activity_name = ?");
 
         fetchCourseInstanceStmt = connection.prepareStatement(
-            "SELECT ci.id, ci.num_students, ci.study_year, cv.hp, cl.course_code \n" + //
-            "FROM course_instance ci \n" + //
-            "JOIN course_version cv ON ci.course_version_id = cv.id \n" + //
-            "JOIN course_layout cl ON cv.course_layout_id = cl.id \n" + //
-            "WHERE ci.id = ? AND ci.study_year = ? FOR UPDATE"
+            "SELECT ci." + CI_PK_COLUMN_NAME + ", ci.num_students, ci.study_year, cv.hp, cl.course_code \n" + //
+            "FROM " + CI_TABLE_NAME + " ci \n" + //
+            "JOIN " + CV_TABLE_NAME + " cv ON ci.course_version_id = cv." + CV_PK_COLUMN_NAME + " \n" + //
+            "JOIN " + CL_TABLE_NAME + " cl ON cv.course_layout_id = cl." + CL_PK_COLUMN_NAME + "\n" + //
+            "WHERE ci." + CI_PK_COLUMN_NAME + " = ? AND ci.study_year = ? FOR UPDATE"
         );
 
         fetchPlannedActivityStmt = connection.prepareStatement(
             "SELECT pa.*, ta.factor\n" + //
             "FROM planned_activity pa JOIN teaching_activity ta ON pa.activity_id = ta.id\n" + //
-            "JOIN course_instance ci ON ci.id = pa.course_instance_id AND ci.id = ? \n" + //
-            "JOIN course_version cv ON ci.course_version_id = cv.id\n" + //
-            "JOIN course_layout cl ON cv.course_layout_id = cl.id FOR UPDATE"
+            "JOIN " + CI_TABLE_NAME + " ci ON pa.course_instance_id = ci." + CI_PK_COLUMN_NAME + " AND ci." + CI_PK_COLUMN_NAME + " = ? \n" + //
+            "JOIN " + CV_TABLE_NAME + " cv ON ci.course_version_id = cv." + CV_PK_COLUMN_NAME + " \n" + //
+            "JOIN " + CL_TABLE_NAME + " cl ON cv.course_layout_id = cl." + CL_PK_COLUMN_NAME + " FOR UPDATE"
         );
 
         fetchAdminExamHoursForCourseStmt = connection.prepareStatement(
             "SELECT ci.id, aaeh.admin_hours_per_employee, aaeh.exam_hours_per_employee \n" + //
-            "FROM course_instance ci JOIN admin_and_exam_hours_per_employee_and_course aaeh \n" + //
+            "FROM " + CI_TABLE_NAME + " ci JOIN admin_and_exam_hours_per_employee_and_course aaeh \n" + //
             "ON ci." + CI_PK_COLUMN_NAME + " = aaeh.ciid \n" + //
             "WHERE ci." + CI_PK_COLUMN_NAME + " = ?"
         );
@@ -331,38 +335,39 @@ public class TeachingActivityDAO {
             "FROM employee_salary es WHERE es.employee_id = ? FOR UPDATE");
 
         showTeachingCostsStmt = connection.prepareStatement(
-            "SELECT cl.course_code, ci." + CI_PK_COLUMN_NAME  + " AS course_instance,\n" + 
-            "sp.period_name AS study_period, (?) AS planned_cost, (?) AS actual_cost \n" + //
-            "FROM course_instance ci JOIN course_version cv ON ci.course_version_id = cv.id \n" + //
-            "JOIN course_layout cl ON cv.course_layout_id = cl.id \n" + //
-            "JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\n" + //
-            "JOIN study_period sp ON cisp.study_period_id = sp.id \n" + //
-            "WHERE ci.id = ?"
+            "SELECT cl.course_code, ci." + CI_PK_COLUMN_NAME  + " AS course_instance,\n" +
+            "sp.period_name AS study_period, (?) AS planned_cost, (?) AS actual_cost \n" +
+            "FROM " + CI_TABLE_NAME + " ci \n" +
+            "JOIN " + CV_TABLE_NAME + " cv ON ci.course_version_id = cv." + CV_PK_COLUMN_NAME + " \n" +
+            "JOIN " + CL_TABLE_NAME + " cl ON cv.course_layout_id = cl." + CL_PK_COLUMN_NAME + " \n" +
+            "JOIN course_instance_study_period cisp ON ci." + CI_PK_COLUMN_NAME + " = cisp.course_instance_id\n" +
+            "JOIN study_period sp ON cisp.study_period_id = sp.id \n" +
+            "WHERE ci." + CI_PK_COLUMN_NAME + " = ?"
         );
         showTARowsStmt = connection.prepareStatement("SELECT * FROM "+ TEACHING_ACTIVITY_TABLE_NAME);
 
         deallocatePAStmt = connection.prepareStatement("DELETE FROM " + PLANNED_ACTIVITY_TABLE_NAME 
-                + " WHERE " + PLANNED_ACTIVITY_PK_ID + "= ?");
+                + " WHERE " + PLANNED_ACTIVITY_PK_ID + " = ?");
 
         findPAsForTeacherStmt = connection.prepareStatement(
-            "SELECT  \r\n" + //
-            "    COUNT(ci.id) AS num_courses,\r\n" + //
-            "    sp.period_name\r\n" + //
-            "FROM\r\n" + //
-            "    planned_activity pa \r\n" + //
-            "    JOIN course_instance ci ON pa.course_instance_id = ci.id AND ci.study_year = ?\r\n" + //
-            "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\r\n" + //
-            "    JOIN study_period sp ON cisp.study_period_id = sp.id\r\n" + //
-            "WHERE pa.employee_id = ? \n" + //
+            "SELECT  \n" +
+            "    COUNT(ci." + CI_PK_COLUMN_NAME + ") AS num_courses,\n" +
+            "    sp.period_name\n" +
+            "FROM\n" +
+            "    planned_activity pa \n" +
+            "    JOIN " + CI_TABLE_NAME + " ci ON pa.course_instance_id = ci." + CI_PK_COLUMN_NAME + " AND ci.study_year = ? \n" +
+            "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id \n" +
+            "    JOIN study_period sp ON cisp.study_period_id = sp.id \n" +
+            "WHERE pa.employee_id = ? \n" +
             "GROUP BY sp.period_name"
         );
 
         findPeriodForCoursinstanceStmt = connection.prepareStatement(
-                "SELECT sp.period_name\r\n" + //
-                    "FROM course_instance ci\r\n" + //
-                    "JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id\r\n" + //
-                    "JOIN study_period sp ON cisp.study_period_id = sp.id\r\n" + //
-                    "WHERE ci.id= ?");
+                "SELECT sp.period_name\n" + //
+                    "FROM " + CI_TABLE_NAME + " ci\n" + //
+                    "JOIN course_instance_study_period cisp ON ci." + CI_PK_COLUMN_NAME + " = cisp.course_instance_id\n" + //
+                    "JOIN study_period sp ON cisp.study_period_id = sp.id\n" + //
+                    "WHERE ci." + CI_PK_COLUMN_NAME + " = ?");
         
         findMaxCoursesPerTeacherStmt = connection.prepareStatement("SELECT " + EC_C_COLUMN_NAME
                 + " FROM " + EC_C_TABLE_NAME + " WHERE " + EC_C_PK_COLUMN_NAME + "=1" );
