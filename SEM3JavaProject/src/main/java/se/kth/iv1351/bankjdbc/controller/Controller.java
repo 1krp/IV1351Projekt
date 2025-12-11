@@ -116,6 +116,7 @@ public class Controller {
     }
 
     /**
+     * Task A4 - Add a new teaching activity
      * 
      * @param activityName
      * @param factor
@@ -133,25 +134,6 @@ public class Controller {
         try {
             teachingActivityDAO.createTAInPA(activityName, factor, employee_id, course_instance_id, 
                 planned_hours, allocated_hours);
-        } catch(TeachingActivityDBException tadbe){
-            throw new RejectedException(failureMsg, tadbe);
-        } catch (Exception e) {
-            commitOngoingTransaction(failureMsg);
-            throw new RejectedException(failureMsg, e);
-        }
-    }
-
-    /**
-     * 
-     * @param activityName
-     * @throws RejectedException
-     */
-    public void deleteTeacherActivity(String activityName) throws RejectedException{
-
-        String failureMsg = "Could not delete "+ activityName +" from teaching activity";
-
-        try{
-            teachingActivityDAO.removeActivity(activityName);
         } catch(TeachingActivityDBException tadbe){
             throw new RejectedException(failureMsg, tadbe);
         } catch (Exception e) {

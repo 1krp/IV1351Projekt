@@ -55,10 +55,6 @@ public enum Command {
     /**
      * Shows all rows of a given teaching activity in planned activity table
      */
-    REMOVE_ACTIVITY,
-    /**
-     * Removes a activity from activity table given an activity name
-     */
     SHOW_TEACHING_ACTIVITY,
     /**
      * Lists all commands.
