@@ -4,6 +4,8 @@ JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id
 JOIN study_period sp ON cisp.study_period_id = sp.id
 WHERE ci.id=1;
 
+
+--PAs for emp
 SELECT 
     pa.id paid,
     ci.id ciid,
@@ -15,7 +17,7 @@ JOIN study_period sp ON cisp.study_period_id=sp.id
 WHERE pa.employee_id=1;
 
 SELECT * FROM employment_constants
-
+-- ci per peridod
 SELECT 
     ci.id ciid,
     sp.period_name
@@ -24,7 +26,7 @@ FROM course_instance ci
 JOIN course_instance_study_period cisp ON ci.id=cisp.course_instance_id
 JOIN study_period sp ON cisp.study_period_id=sp.id
 
-
+-- ciids for emp
 SELECT 
     DISTINCT ci.id ciid
 
@@ -32,6 +34,7 @@ FROM course_instance ci
 JOIN planned_activity pa On pa.course_instance_id=ci.id
 WHERE pa.employee_id = 1
 
+            -- the query for course allocation
             SELECT
                 COUNT(DISTINCT ci.id) AS num_courses,
                 sp.period_name

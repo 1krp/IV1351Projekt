@@ -26,15 +26,7 @@ public class TeacherAllocatePA {
 
         for (TeacherAllocationDTO allocation : teacherAllocations) {
             
-            if ( (courseInstancePeriod.equals(allocation.getPeriod()) && (allocation.getNumCourses() < maxCourses))) {
-                
-                if (allocation.getNumCourses() >= maxCourses) {
-                    throw new AllocationLimitExceededException(
-                            "Teacher has exceeded maximum allowed courses for period: " + courseInstancePeriod + ". Number of courses: " 
-                                    + allocation.getNumCourses() + ", max: " + maxCourses
-                    );
-                }
-                
+            if ( (courseInstancePeriod.equals(allocation.getPeriod()) && (allocation.getNumCourses() < maxCourses))) {    
                 dao.createPlannedActivity(plannedActivityDTO);
                 return;
             }
