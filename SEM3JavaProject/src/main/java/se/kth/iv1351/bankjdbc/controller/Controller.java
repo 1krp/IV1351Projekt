@@ -116,6 +116,7 @@ public class Controller {
     }
 
     /**
+     * Task A4 - Add a new teaching activity
      * 
      * @param activityName
      * @param factor
