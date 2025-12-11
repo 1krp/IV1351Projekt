@@ -102,8 +102,8 @@ public class BlockingInterpreter {
                         int instance_id = Integer.parseInt(cmdLine.getParameter(0));
                         int new_num_students = Integer.parseInt(cmdLine.getParameter(1));
 
-                        ctrl.modifyNumStudendsInCourseInstance( instance_id, new_num_students);
-                        
+                        ctrl.modifyNumStudendsInCourseInstance(instance_id, new_num_students);
+
                         System.out.println(
                             "\n" +
                             "Course instance ID: " + instance_id + "\n" + 
