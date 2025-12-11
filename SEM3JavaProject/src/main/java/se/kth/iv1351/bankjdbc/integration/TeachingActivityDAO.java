@@ -26,6 +26,7 @@ package se.kth.iv1351.bankjdbc.integration;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -284,7 +285,7 @@ public class TeachingActivityDAO {
                 + " SET " + EC_C_COLUMN_NAME + " = ? WHERE " + EC_C_PK_COLUMN_NAME + " = ?");
 
         createTAStmt = connection.prepareStatement("INSERT INTO " + TEACHING_ACTIVITY_TABLE_NAME 
-                + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ", "+ TEACHING_ACTIVITY_COLUMN_FACTOR +") VALUES (?,?)");//Exercise
+                + "(" + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + ", "+ TEACHING_ACTIVITY_COLUMN_FACTOR +") VALUES (?,?)", Statement.RETURN_GENERATED_KEYS);//Exercise
 
         findTAStmt = connection.prepareStatement("SELECT " + TEACHING_ACTIVITY_TABLE_PK
                 + " FROM " + TEACHING_ACTIVITY_TABLE_NAME + " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " = ?"); //Om TA redan finns
@@ -621,21 +622,14 @@ public class TeachingActivityDAO {
                 if (updatedRows != 1) {
                     handleException(failureMsgUpdate, null);
                 }
+                ResultSet generatedKeys = createTAStmt.getGeneratedKeys();
+                 if(generatedKeys.next()){
+                    activityId = generatedKeys.getInt(1);
+                }
             } 
-        commit();
         } catch (SQLException sqle) {
             handleException(failureMsgSQL, sqle);
         }
-        if (activityId == 0) {
-            try(ResultSet generatedKeys = createTAStmt.getGeneratedKeys()){
-                if(generatedKeys.next()){
-                    activityId = generatedKeys.getInt(1);
-                }
-            }catch (SQLException sqle) {
-                handleException(failureMsgSQLKeys, sqle);
-            }
-        }else{
-            handleException(failureMsgDontAdd, null);}
         return activityId;
     }
     public void removeActivity(String activityName) throws TeachingActivityDBException {
