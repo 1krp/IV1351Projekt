@@ -33,13 +33,6 @@ import java.util.ArrayList;
 
 import se.kth.iv1351.bankjdbc.model.DTO.*;
 
-import se.kth.iv1351.bankjdbc.model.DTO.PlannedActivityDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.AdminExamHoursDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.TeacherAllocationDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.SalaryDTO;
-import se.kth.iv1351.bankjdbc.model.DTO.CourseInstanceDTO;
-
 /**
  * This data access object (DAO) encapsulates all database calls in the bank
  * application. No code outside this class shall have any knowledge about the
@@ -76,10 +69,7 @@ public class TeachingActivityDAO {
     private PreparedStatement updateTeacherAllocationLimitStmt;
     private PreparedStatement updateNumStudendsInCIStmt;
     private PreparedStatement createTAStmt;
-    private PreparedStatement showTARowsStmt;
-    private PreparedStatement createTAFactorStmt;
     private PreparedStatement findTAStmt;
-    private PreparedStatement deletePlannedActivityStmt;
     private PreparedStatement deleteActivityStmt;
     private PreparedStatement insertNewActivityStmt;
     private PreparedStatement displayTAStmt;
@@ -166,7 +156,7 @@ public class TeachingActivityDAO {
 
     public ArrayList<TeacherAllocationDTO> findTeacherAllocationPeriod(String year, int employeeId) throws TeachingActivityDBException {
         String failureMsg = "Could not search for teacher allocation pressure";
-
+        String closeMsg = "Could not close result set for teacher allocation pressure";
         ArrayList<TeacherAllocationDTO> allocations = new ArrayList<>();
         try {
 
@@ -179,9 +169,9 @@ public class TeachingActivityDAO {
                     result.getInt("num_courses"),
                     result.getString("period_name")
                 );
-
                 allocations.add(allocationDTO);
             }
+            closeResultSet(closeMsg, result);
         } catch (SQLException sqle) {
             handleException(failureMsg, sqle);
         } 
@@ -270,8 +260,8 @@ public class TeachingActivityDAO {
     }
 
     private void connectToDB() throws ClassNotFoundException, SQLException {
-        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
-                "postgres", "cbmmlp");
+        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres",
+                "Sparfbag", "Sagastass20!");
         connection.setAutoCommit(false);
     }
 
@@ -289,9 +279,6 @@ public class TeachingActivityDAO {
 
         findTAStmt = connection.prepareStatement("SELECT " + TEACHING_ACTIVITY_TABLE_PK
                 + " FROM " + TEACHING_ACTIVITY_TABLE_NAME + " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " = ?"); //Om TA redan finns
-        
-        deletePlannedActivityStmt = connection.prepareStatement("DELETE FROM " + PLANNED_ACTIVITY_TABLE_NAME + 
-        " WHERE " + PLANNED_ACTIVITY_COLUMN_ACTIVITY_ID + " =?");
 
         deleteActivityStmt = connection.prepareStatement("DELETE FROM " + TEACHING_ACTIVITY_TABLE_NAME + 
         " WHERE " + TEACHING_ACTIVITY_COLUMN_ACTIVITY_NAME + " =?");
@@ -345,7 +332,6 @@ public class TeachingActivityDAO {
             "JOIN study_period sp ON cisp.study_period_id = sp.id \n" +
             "WHERE ci." + CI_PK_COLUMN_NAME + " = ?"
         );
-        showTARowsStmt = connection.prepareStatement("SELECT * FROM "+ TEACHING_ACTIVITY_TABLE_NAME);
 
         deallocatePAStmt = connection.prepareStatement("DELETE FROM " + PLANNED_ACTIVITY_TABLE_NAME 
                 + " WHERE " + PLANNED_ACTIVITY_PK_ID + " = ?");
@@ -390,7 +376,7 @@ public class TeachingActivityDAO {
         throws TeachingActivityDBException {
             
         CourseInstanceDTO courseInst = null;
-        
+        String closeMsg = "Could not close result set for course instance fetch";
         try {
             fetchCourseInstanceStmt.setInt(1, cid);
             fetchCourseInstanceStmt.setString(2, year);
@@ -405,7 +391,7 @@ public class TeachingActivityDAO {
                     rs.getString("course_code")
                 );
             }
-                    
+            closeResultSet(closeMsg, rs);        
         } catch (SQLException se){
             String erMsg = "Error when trying to fetch course instance.";
             handleException(erMsg, se);
@@ -426,7 +412,7 @@ public class TeachingActivityDAO {
         throws TeachingActivityDBException {
             
         ArrayList<PlannedActivityDTO> allPlannedActivities = new ArrayList<>();
-        
+        String closeMsg = "Could not close result set for planned activity fetch";
         try {
             fetchPlannedActivityStmt.setInt(1, courseId);
             ResultSet rs = fetchPlannedActivityStmt.executeQuery();
@@ -444,7 +430,7 @@ public class TeachingActivityDAO {
 
                 allPlannedActivities.add(plannedActivity);
             }
-                    
+            closeResultSet(closeMsg, rs);
         } catch (SQLException se){
             String erMsg = "Error when trying to fetch planned activity.";
             handleException(erMsg, se);
@@ -463,7 +449,7 @@ public class TeachingActivityDAO {
         throws TeachingActivityDBException {
             
         AdminExamHoursDTO adminExamHours = null;
-        
+        String closeMsg = "Could not close result set for admin/exam hours fetch";
         try {
             fetchAdminExamHoursForCourseStmt.setInt(1, courseId);
             ResultSet rs = fetchAdminExamHoursForCourseStmt.executeQuery();
@@ -475,7 +461,7 @@ public class TeachingActivityDAO {
                     rs.getInt("exam_hours_per_employee")
                 );
             }
-                    
+            closeResultSet(closeMsg, rs);     
         } catch (SQLException se){
             String erMsg = "Error when trying to fetch admin/exam hours.";
             handleException(erMsg, se);
@@ -495,7 +481,7 @@ public class TeachingActivityDAO {
         throws TeachingActivityDBException {
             
         ArrayList<SalaryDTO> salaries = new ArrayList<>();
-        
+        String closeMsg = "Could not close result set for employee salary fetch";
         try {
             fetchSalaryEmployeeStmt.setInt(1, empId);
             ResultSet rs = fetchSalaryEmployeeStmt.executeQuery();
@@ -507,7 +493,7 @@ public class TeachingActivityDAO {
                 );
                 salaries.add(salary);
             }
-
+            closeResultSet(closeMsg, rs);
         } catch (SQLException se){
             String erMsg = "Error when trying to fetch avg employee salary";
             handleException(erMsg, se);
@@ -530,7 +516,7 @@ public class TeachingActivityDAO {
         throws TeachingActivityDBException {
             
         ArrayList<TeachingCostDTO> allTeachingCosts = new ArrayList<>();
-        
+        String closeMsg = "Could not close result set for teaching costs fetch";
         try {
             showTeachingCostsStmt.setDouble(1, plannedCost);
             showTeachingCostsStmt.setDouble(2, actCost);
@@ -547,7 +533,8 @@ public class TeachingActivityDAO {
                 );
 
                 allTeachingCosts.add(teachingCosts);
-            }        
+            }   
+            closeResultSet(closeMsg, rs);     
         } catch (SQLException se){
             String erMsg = "Error when trying to fetch rows for teaching costs.";
             handleException(erMsg, se);
@@ -578,14 +565,15 @@ public class TeachingActivityDAO {
         if (updatedRows != 1) {
                 handleException(failureMsg, null);
             }
-        commit();
+        connection.commit();
         } catch (SQLException sqle) {
             handleException(failureMsgSQL, sqle);
         }    
     }
     public ArrayList<PAjoinTADTO> showTAs(String activityName) throws TeachingActivityDBException{
         String failureMsg = "Error";
-        ArrayList<PAjoinTADTO> joinedTable = new ArrayList<>();;
+        String closeMsg = "Could not close result set for teaching activity display";
+        ArrayList<PAjoinTADTO> joinedTable = new ArrayList<>();
         try{
             displayTAStmt.setString(1, activityName);
             ResultSet rs = displayTAStmt.executeQuery();
@@ -599,6 +587,7 @@ public class TeachingActivityDAO {
                         rs.getString("activity_name")
                 ));
             }
+            closeResultSet(closeMsg, rs);
         }catch (SQLException sqle) {
             handleException(failureMsg, sqle);
         }
@@ -608,8 +597,6 @@ public class TeachingActivityDAO {
     private int createTeachingActivity(String activityName, double factor) throws TeachingActivityDBException {
         String failureMsgUpdate = "Could not add teaching activity: " + activityName;
         String failureMsgSQL = "SQL error for: " + activityName;
-        String failureMsgSQLKeys = "SQL error for generated keys: " + activityName;
-        String failureMsgDontAdd = activityName+" Already exists";
         int updatedRows = 0;
         int activityId = 0;
         
@@ -646,14 +633,15 @@ public class TeachingActivityDAO {
             handleException(failureMsgSQL, sql);
         }
     }
-    private int findTAByName(String activityName) throws SQLException {
-
+    private int findTAByName(String activityName) throws SQLException, TeachingActivityDBException {
+        String closeMsg = "Could not close result set for teaching activity search";
         ResultSet result = null;
         findTAStmt.setString(1, activityName);
         result = findTAStmt.executeQuery();
         if (result.next()) {
             return result.getInt(TEACHING_ACTIVITY_TABLE_PK);
         }
+        closeResultSet(closeMsg, result);
         return 0;
     }
 
