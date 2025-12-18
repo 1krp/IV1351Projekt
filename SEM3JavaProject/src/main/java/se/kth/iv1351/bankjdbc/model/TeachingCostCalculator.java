@@ -94,9 +94,7 @@ public class TeachingCostCalculator {
                 }
             }
         }
-
         return currentSalary != null ? currentSalary.getSalary() : 0.0;
-
     }
 
     private Date getPeriodStartDate(String year, String studyPeriod){
@@ -119,7 +117,6 @@ public class TeachingCostCalculator {
             default:
                 throw new IllegalArgumentException("Unknown study period: " + studyPeriod);
         }
-
         return date;
     }
 }

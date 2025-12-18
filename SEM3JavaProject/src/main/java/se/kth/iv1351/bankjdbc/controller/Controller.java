@@ -27,6 +27,7 @@ import java.util.ArrayList;
 
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDAO;
 import se.kth.iv1351.bankjdbc.integration.TeachingActivityDBException;
+import se.kth.iv1351.bankjdbc.model.AllocationLimitExceededException;
 import se.kth.iv1351.bankjdbc.model.RejectedException;
 import se.kth.iv1351.bankjdbc.model.TeachingCostCalculator;
 import se.kth.iv1351.bankjdbc.model.DTO.PAjoinTADTO;
@@ -186,7 +187,7 @@ public class Controller {
      * @throws RejectedException
      */
     public void allocatePlannedActivity(int employeeId, int courseInstanceId, String periodName, int plannedHours, 
-        int activityID, int allocatedHours, String year) throws RejectedException {
+        int activityID, int allocatedHours, String year) throws RejectedException, AllocationLimitExceededException {
 
         String failureMsg = "could not allocate activity";
 
@@ -195,9 +196,9 @@ public class Controller {
                 activityID, allocatedHours, year);
         } catch(TeachingActivityDBException tadbe){
             throw new RejectedException(failureMsg, tadbe);
-        } catch (Exception e) {
+        } catch (AllocationLimitExceededException ale) {
             commitOngoingTransaction(failureMsg);
-            throw new RejectedException(failureMsg, e);
+            throw ale;
         }
     }
     

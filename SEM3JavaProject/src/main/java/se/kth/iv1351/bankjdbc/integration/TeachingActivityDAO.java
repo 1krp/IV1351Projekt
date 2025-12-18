@@ -78,7 +78,7 @@ public class TeachingActivityDAO {
     private PreparedStatement fetchSalaryEmployeeStmt;
     private PreparedStatement showTeachingCostsStmt;
     private PreparedStatement deallocatePAStmt;
-    private PreparedStatement findPAsForTeacherStmt;
+    private PreparedStatement fetchPAsForTeacherStmt;
     private PreparedStatement findPeriodForCourseInstanceStmt;
     private PreparedStatement findMaxCoursesPerTeacherStmt;
     private PreparedStatement createPlannedActivityStmt;
@@ -208,17 +208,17 @@ public class TeachingActivityDAO {
         deallocatePAStmt = connection.prepareStatement("DELETE FROM " + PLANNED_ACTIVITY_TABLE_NAME 
                 + " WHERE " + PLANNED_ACTIVITY_PK_ID + " = ?");
 
-        findPAsForTeacherStmt = connection.prepareStatement(
+        fetchPAsForTeacherStmt = connection.prepareStatement(
             "SELECT  \n" +
-            "    COUNT(DISTINCT ci." + CI_PK_COLUMN_NAME + ") AS num_courses,\n" +
+            "    pa.id,\n" +
+            "    ci.id ciid,\n" +
             "    sp.period_name\n" +
             "FROM\n" +
             "    planned_activity pa \n" +
             "    JOIN " + CI_TABLE_NAME + " ci ON pa.course_instance_id = ci." + CI_PK_COLUMN_NAME + " AND ci.study_year = ? \n" +
             "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id \n" +
-            "    JOIN study_period sp ON cisp.study_period_id = sp.id \n" +
-            "WHERE pa.employee_id = ? \n" +
-            "GROUP BY sp.period_name"
+            "    JOIN study_period sp ON cisp.study_period_id = sp.id AND sp.period_name = ? \n" +
+            "WHERE pa.employee_id = ? FOR UPDATE"
         );
 
         findPeriodForCourseInstanceStmt = connection.prepareStatement(
@@ -489,19 +489,25 @@ public class TeachingActivityDAO {
      * @return
      * @throws TeachingActivityDBException
      */
-    public ArrayList<TeacherAllocationDTO> findTeacherAllocationPeriod(String year, int employeeId) throws TeachingActivityDBException {
+    public ArrayList<AllocatedActivityDTO> fetchTeacherAllocationPeriod(
+        String year, int employeeId, String periodName) 
+            throws TeachingActivityDBException {
+
         String failureMsg = "Could not search for teacher allocation pressure";
 
-        ArrayList<TeacherAllocationDTO> allocations = new ArrayList<>();
+        ArrayList<AllocatedActivityDTO> allocations = new ArrayList<>();
+
         try {
 
-            findPAsForTeacherStmt.setString(1, year);
-            findPAsForTeacherStmt.setInt(2, employeeId);
+            fetchPAsForTeacherStmt.setString(1, year);
+            fetchPAsForTeacherStmt.setString(2, periodName);
+            fetchPAsForTeacherStmt.setInt(3, employeeId);
 
-            ResultSet result = findPAsForTeacherStmt.executeQuery();
+            ResultSet result = fetchPAsForTeacherStmt.executeQuery();
             while (result.next()) {
-                TeacherAllocationDTO allocationDTO = new TeacherAllocationDTO(
-                    result.getInt("num_courses"),
+                AllocatedActivityDTO allocationDTO = new AllocatedActivityDTO(
+                    result.getInt("id"),
+                    result.getInt("ciid"),
                     result.getString("period_name")
                 );
 

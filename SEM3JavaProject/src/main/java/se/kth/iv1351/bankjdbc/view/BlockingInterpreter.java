@@ -27,6 +27,8 @@ package se.kth.iv1351.bankjdbc.view;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import se.kth.iv1351.bankjdbc.model.AllocationLimitExceededException;
+
 import se.kth.iv1351.bankjdbc.controller.Controller;
 import se.kth.iv1351.bankjdbc.model.DTO.PAjoinTADTO;
 import se.kth.iv1351.bankjdbc.model.DTO.TeachingCostDTO;
@@ -111,14 +113,21 @@ public class BlockingInterpreter {
                         );
                         break;
                     case ALLOCATE_PLANNED_ACTIVITY:
-                        ctrl.allocatePlannedActivity(   Integer.parseInt(cmdLine.getParameter(0)), 
+                        try {
+                            ctrl.allocatePlannedActivity(   Integer.parseInt(cmdLine.getParameter(0)), 
                                                         Integer.parseInt(cmdLine.getParameter(1)),
-                                                        cmdLine.getParameter(1),
-                                                        Integer.parseInt(cmdLine.getParameter(2)),
+                                                        cmdLine.getParameter(2),
                                                         Integer.parseInt(cmdLine.getParameter(3)),
                                                         Integer.parseInt(cmdLine.getParameter(4)),
-                                                        cmdLine.getParameter(5));
-                        System.out.println("Planned activity allocated.");
+                                                        Integer.parseInt(cmdLine.getParameter(5)),
+                                                        cmdLine.getParameter(6));
+                                                        
+                            System.out.println("Planned activity allocated.");
+
+                        } catch (AllocationLimitExceededException ale){
+                            System.out.println(ale.getMessage());
+                        }
+                        
                         break;
                     case DEALLOCATE_PLANNED_ACTIVITY:
                         ctrl.deallocatePlannedActivity(Integer.parseInt(cmdLine.getParameter(0)));
