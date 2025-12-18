@@ -113,6 +113,7 @@ public class BlockingInterpreter {
                     case ALLOCATE_PLANNED_ACTIVITY:
                         ctrl.allocatePlannedActivity(   Integer.parseInt(cmdLine.getParameter(0)), 
                                                         Integer.parseInt(cmdLine.getParameter(1)),
+                                                        cmdLine.getParameter(1),
                                                         Integer.parseInt(cmdLine.getParameter(2)),
                                                         Integer.parseInt(cmdLine.getParameter(3)),
                                                         Integer.parseInt(cmdLine.getParameter(4)),

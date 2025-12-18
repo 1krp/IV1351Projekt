@@ -129,7 +129,7 @@ public class TeachingActivityDAO {
      */
     private void connectToDB() throws ClassNotFoundException, SQLException {
         connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
-                "postgres", "asd123");
+                "postgres", "cbmmlp");
         connection.setAutoCommit(false);
     }
 
@@ -174,11 +174,13 @@ public class TeachingActivityDAO {
         );
 
         fetchPlannedActivityStmt = connection.prepareStatement(
-            "SELECT pa.*, ta.factor\n" + //
+            "SELECT pa.*, sp.period_name, ta.factor\n" + //
             "FROM planned_activity pa JOIN teaching_activity ta ON pa.activity_id = ta.id\n" + //
             "JOIN " + CI_TABLE_NAME + " ci ON pa.course_instance_id = ci." + CI_PK_COLUMN_NAME + " AND ci." + CI_PK_COLUMN_NAME + " = ? \n" + //
             "JOIN " + CV_TABLE_NAME + " cv ON ci.course_version_id = cv." + CV_PK_COLUMN_NAME + " \n" + //
-            "JOIN " + CL_TABLE_NAME + " cl ON cv.course_layout_id = cl." + CL_PK_COLUMN_NAME + " FOR SHARE"
+            "JOIN " + CL_TABLE_NAME + " cl ON cv.course_layout_id = cl." + CL_PK_COLUMN_NAME + " \n" + //
+            "JOIN course_instance_study_period cisp ON cisp.course_instance_id = ci." + CI_PK_COLUMN_NAME + " \n" + //
+            "JOIN study_period sp ON sp.id = cisp.study_period_id FOR SHARE"
         );
 
         fetchAdminExamHoursForCourseStmt = connection.prepareStatement(
@@ -189,7 +191,7 @@ public class TeachingActivityDAO {
         );
 
         fetchSalaryEmployeeStmt = connection.prepareStatement(
-            "SELECT es.employee_id, es.salary_per_hour \n" + //
+            "SELECT es.employee_id, es.salary_enforcement_date, es.salary_per_hour \n" + //
             "FROM employee_salary es WHERE es.employee_id = ? FOR SHARE");
 
         showTeachingCostsStmt = connection.prepareStatement(
@@ -292,6 +294,7 @@ public class TeachingActivityDAO {
                     rs.getInt("id"),
                     rs.getInt("employee_id"),
                     rs.getInt("course_instance_id"),
+                    rs.getString("period_name"),
                     rs.getInt("planned_hours"),
                     rs.getInt("allocated_hours"),
                     rs.getInt("activity_id"),
@@ -359,6 +362,7 @@ public class TeachingActivityDAO {
             while (rs.next()){
                 SalaryDTO salary = new SalaryDTO(
                     rs.getInt("employee_id"),
+                    rs.getDate("salary_enforcement_date"),
                     rs.getDouble("salary_per_hour")
                 );
                 salaries.add(salary);
