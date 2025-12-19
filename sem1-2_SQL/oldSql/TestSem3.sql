@@ -71,7 +71,7 @@ SELECT * FROM course_instance
 
 
 SELECT
-    DISTINCT ci.id AS ciid,
+    ci.id AS ciid,
     sp.period_name
 FROM
     planned_activity pa 
@@ -79,3 +79,14 @@ FROM
     JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id
     JOIN study_period sp ON cisp.study_period_id = sp.id
 WHERE pa.employee_id = 1
+
+--- emp 3
+SELECT 
+    DISTINCT ci.id ciid_per_emp,
+    sp.period_name
+
+FROM course_instance ci
+JOIN planned_activity pa On pa.course_instance_id=ci.id
+JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id
+JOIN study_period sp ON cisp.study_period_id = sp.id
+WHERE pa.employee_id = 3;

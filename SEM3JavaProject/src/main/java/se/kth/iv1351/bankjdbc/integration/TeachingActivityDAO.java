@@ -210,7 +210,7 @@ public class TeachingActivityDAO {
 
         findPAsForTeacherStmt = connection.prepareStatement(
             "SELECT  \n" +
-            "    DISTINCT ci." + CI_PK_COLUMN_NAME + " AS ciid,\n" +
+            "    ci." + CI_PK_COLUMN_NAME + " AS ciid,\n" +
             "    sp.period_name\n" +
             "FROM\n" +
             "    planned_activity pa \n" +

@@ -26,7 +26,23 @@ public class TeacherAllocatePA {
         ArrayList<TeacherAllocationDTO> teacherAllocations = dao.findTeacherAllocationPeriod(year, employeeId);
         int maxCourses = dao.findMaxCoursesPerTeacher();
 
-        for (TeacherAllocationDTO allocation : teacherAllocations) {
+
+        // filter out duplicates of DTOs
+        ArrayList<TeacherAllocationDTO> distinctTA = new ArrayList<>();
+        for (TeacherAllocationDTO allocation : teacherAllocations) { 
+            boolean taken = false;
+
+            for (TeacherAllocationDTO a : distinctTA){
+                if ((allocation.getCourseId() == a.getCourseId()) && (allocation.getPeriod().equals(a.getPeriod()))){
+                    taken = true;
+                }
+            }
+            if (!taken) {
+                distinctTA.add(allocation);
+            }
+        }
+
+        for (TeacherAllocationDTO allocation : distinctTA) {
             // if course already exists in the teachers allocations
             if ((allocation.getCourseId() == courseInstanceId) && (courseInstancePeriod.equals(allocation.getPeriod()))) {
                 dao.createPlannedActivity(plannedActivityDTO);
