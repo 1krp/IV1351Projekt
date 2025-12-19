@@ -129,7 +129,7 @@ public class TeachingActivityDAO {
      */
     private void connectToDB() throws ClassNotFoundException, SQLException {
         connection = DriverManager.getConnection("jdbc:postgresql://localhost:5433/iv_db",
-                "postgres", "cbmmlp");
+                "postgres", "asd123");
         connection.setAutoCommit(false);
     }
 
@@ -210,15 +210,14 @@ public class TeachingActivityDAO {
 
         findPAsForTeacherStmt = connection.prepareStatement(
             "SELECT  \n" +
-            "    COUNT(DISTINCT ci." + CI_PK_COLUMN_NAME + ") AS num_courses,\n" +
+            "    DISTINCT ci." + CI_PK_COLUMN_NAME + " AS ciid,\n" +
             "    sp.period_name\n" +
             "FROM\n" +
             "    planned_activity pa \n" +
             "    JOIN " + CI_TABLE_NAME + " ci ON pa.course_instance_id = ci." + CI_PK_COLUMN_NAME + " AND ci.study_year = ? \n" +
             "    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id \n" +
             "    JOIN study_period sp ON cisp.study_period_id = sp.id \n" +
-            "WHERE pa.employee_id = ? \n" +
-            "GROUP BY sp.period_name"
+            "WHERE pa.employee_id = ? FOR UPDATE"
         );
 
         findPeriodForCourseInstanceStmt = connection.prepareStatement(
@@ -226,7 +225,7 @@ public class TeachingActivityDAO {
                     "FROM " + CI_TABLE_NAME + " ci\n" +
                     "JOIN course_instance_study_period cisp ON ci." + CI_PK_COLUMN_NAME + " = cisp.course_instance_id\n" + //
                     "JOIN study_period sp ON cisp.study_period_id = sp.id\n" +
-                    "WHERE ci." + CI_PK_COLUMN_NAME + " = ? FOR UPDATE");
+                    "WHERE ci." + CI_PK_COLUMN_NAME + " = ? FOR SHARE");
         
         findMaxCoursesPerTeacherStmt = connection.prepareStatement("SELECT " + EC_C_COLUMN_NAME
                 + " FROM " + EC_C_TABLE_NAME + " WHERE " + EC_C_PK_COLUMN_NAME + " = 1 FOR SHARE");
@@ -501,7 +500,7 @@ public class TeachingActivityDAO {
             ResultSet result = findPAsForTeacherStmt.executeQuery();
             while (result.next()) {
                 TeacherAllocationDTO allocationDTO = new TeacherAllocationDTO(
-                    result.getInt("num_courses"),
+                    result.getInt("ciid"),
                     result.getString("period_name")
                 );
 

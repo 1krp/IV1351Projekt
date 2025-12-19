@@ -17,6 +17,7 @@ JOIN study_period sp ON cisp.study_period_id=sp.id
 WHERE pa.employee_id=1;
 
 SELECT * FROM employment_constants
+
 -- ci per peridod
 SELECT 
     ci.id ciid,
@@ -65,3 +66,16 @@ WHERE pa.employee_id = 1;
 
 
 SELECT * FROM course_instance
+
+
+
+
+SELECT
+    DISTINCT ci.id AS ciid,
+    sp.period_name
+FROM
+    planned_activity pa 
+    JOIN course_instance ci ON pa.course_instance_id = ci.id AND ci.study_year = '2025'
+    JOIN course_instance_study_period cisp ON ci.id = cisp.course_instance_id
+    JOIN study_period sp ON cisp.study_period_id = sp.id
+WHERE pa.employee_id = 1

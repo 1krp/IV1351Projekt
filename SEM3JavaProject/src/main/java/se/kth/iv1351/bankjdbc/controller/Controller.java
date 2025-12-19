@@ -185,13 +185,13 @@ public class Controller {
      * @param year
      * @throws RejectedException
      */
-    public void allocatePlannedActivity(int employeeId, int courseInstanceId, String periodName, int plannedHours, 
+    public void allocatePlannedActivity(int employeeId, int courseInstanceId, int plannedHours, 
         int activityID, int allocatedHours, String year) throws RejectedException {
 
         String failureMsg = "could not allocate activity";
 
         try {
-            tAllocatePA.allocatePlannedActivity(employeeId, courseInstanceId, periodName, plannedHours, 
+            tAllocatePA.allocatePlannedActivity(employeeId, courseInstanceId, plannedHours, 
                 activityID, allocatedHours, year);
         } catch(TeachingActivityDBException tadbe){
             throw new RejectedException(failureMsg, tadbe);
